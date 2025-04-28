@@ -47,7 +47,7 @@ fi
 BIN_FILES_LOCATION="bin"
 
 # Set compiling flags for gcc
-FLAGS=(-fopenmp -lm )
+FLAGS=(-fopenmp -lm lib/graph_creation.c)
 
 # Set the source file and output binary names
 SOURCE_FILE="main.c"
