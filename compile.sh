@@ -14,6 +14,7 @@ DEBUG=false
 CLEAN=false
 HELP=false
 OPTIMIZE=false
+TEST=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -d|--debug)
@@ -24,6 +25,9 @@ while [[ $# -gt 0 ]]; do
             shift ;;
         -O|--optimize)
             OPTIMIZE=true
+            shift;;
+        -t|--test)
+            TEST=true
             shift;;
         -h|--help)
             HELP=true
@@ -38,6 +42,7 @@ if $HELP; then
     echo "Script to compile this project with gcc. All available flags:
     -d / --debug    ->  adds -g to gcc flags
     -c / --clean    ->  cleans /bin directory
+    -t / --test     ->  builds test version of project
     -O / --optimize ->  adds optimalization flags such as -O3, -march, ... 
     "
     exit 0
@@ -50,8 +55,13 @@ BIN_FILES_LOCATION="bin"
 FLAGS=(-fopenmp -lm lib/graph_creation.c)
 
 # Set the source file and output binary names
+if $TEST; then
+SOURCE_FILE="test.c"
+OUTPUT_BINARY="test_apk"
+else
 SOURCE_FILE="main.c"
 OUTPUT_BINARY="apk"
+fi
 
 # Check if source file is present
 if [ ! -f "$SOURCE_FILE" ]; then
