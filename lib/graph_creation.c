@@ -5,7 +5,6 @@
 #include<omp.h>
 #include"graph.h"
 
-
 uint16_t gcd(uint16_t a, uint16_t b){
     uint16_t temp;
     while (b != 0){
@@ -17,6 +16,31 @@ uint16_t gcd(uint16_t a, uint16_t b){
     return a;
 }
 
+uint16_t find_step(uint16_t size,  unsigned int* seed){
+
+    uint16_t* candidats = (uint16_t*)malloc(sizeof(uint16_t) * size);
+    uint16_t index = 0, result;
+
+    for(uint16_t i = 1; i < size; i++){
+
+        if(gcd(i, size) == 1){
+            candidats[index] = i;
+            index++;
+        }
+
+        if(index == size / 2)
+            break;
+
+    }
+
+    result = candidats[rand_r(seed) % index];
+
+    free(candidats);
+    candidats = NULL;
+
+    return result;
+
+}
 
 struct graph* create_graph(uint16_t size, uint8_t conf){
 
@@ -65,10 +89,7 @@ struct graph* create_graph(uint16_t size, uint8_t conf){
         seed = (unsigned int)time(NULL) + omp_get_thread_num();
     }
 
-    uint8_t step;
-    do{
-        step = (rand_r(&seed) % (size - 1)) + 1;
-    }while(gcd(step, size) != 1);
+    uint16_t step = find_step(size, &seed);
 
     uint16_t p = 0, pn = step;
 
