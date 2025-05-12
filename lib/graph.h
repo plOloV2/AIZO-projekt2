@@ -2,11 +2,10 @@
 
 struct connect {
     uint16_t target;
-    uint8_t weight;
+    uint16_t weight;
 };
 
 struct graph {
     struct connect** list;
-    uint8_t** matrix;
-    uint8_t** matrix_opt;
+    uint16_t** matrix;
 };

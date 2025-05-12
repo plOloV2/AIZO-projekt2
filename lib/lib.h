@@ -1,3 +1,3 @@
 #include"graph.h"
 
-struct graph* create_graph(int size, int conf);
+struct graph* create_graph(uint16_t size, uint8_t conf);

@@ -56,11 +56,13 @@ FLAGS=(-fopenmp -lm lib/graph_creation.c)
 
 # Set the source file and output binary names
 if $TEST; then
-SOURCE_FILE="test.c"
-OUTPUT_BINARY="test_apk"
+    SOURCE_FILE="test.c"
+    OUTPUT_BINARY="test_apk"
+    FLAGS+=(-DTEST)
+    echo "Test enabled."
 else
-SOURCE_FILE="main.c"
-OUTPUT_BINARY="apk"
+    SOURCE_FILE="main.c"
+    OUTPUT_BINARY="apk"
 fi
 
 # Check if source file is present
