@@ -6,14 +6,19 @@
 #include"graph.h"
 
 uint16_t gcd(uint16_t a, uint16_t b){
+
     uint16_t temp;
+
     while (b != 0){
         temp = a % b;
 
         a = b;
         b = temp;
+
     }
+
     return a;
+
 }
 
 uint16_t find_step(uint16_t size,  unsigned int* seed){
@@ -42,39 +47,38 @@ uint16_t find_step(uint16_t size,  unsigned int* seed){
 
 }
 
-struct graph* create_graph(uint16_t size, uint8_t conf){
+struct graph** create_graph(uint16_t size){
 
-    struct graph* result = (struct graph*)malloc(sizeof(struct graph));
+    struct graph** result = (struct graph**)malloc(sizeof(struct graph*));
     if(result == NULL)
         return NULL;
 
+    for(uint8_t i = 0; i < 3; i++){
 
-    result->matrix = (uint8_t**)malloc(sizeof(uint8_t*) * size);
-    if(result->matrix == NULL)
-        return NULL;
+        result[i] = (struct graph*)malloc(sizeof(struct graph));
+        if(result == NULL)
+            return NULL;
 
-    for(uint16_t i = 0; i < size; i++){
-        result->matrix[i] = (uint8_t*)malloc(sizeof(uint8_t) * size);
-        if(result->matrix[i] == NULL)
-        return NULL;
+        result[i]->matrix = (uint16_t**)malloc(sizeof(uint16_t*) * size - 1);
+        if(result[i]->matrix == NULL)
+            return NULL;
+
+        for(uint16_t j = 0; j < size - 1; j++){
+
+            result[i]->matrix[j] = (uint16_t*)malloc(sizeof(uint16_t) * (j + 1));
+            if(result[i]->matrix[j] == NULL)
+            return NULL;
+
+            for(uint16_t k = 0; k < i + 1; k++)
+                result[i]->matrix[j][k] = 0;
+            
+        }
+
+        result[i]->list = (struct connect*)malloc(sizeof(struct connect) * size);
+        if(result[i]->list == NULL)
+            return NULL;
+
     }
-
-
-    // result->matrix_opt = (uint8_t**)malloc(sizeof(uint8_t*) * (size - 1));
-    // if(result->matrix_opt == NULL)
-    //     return NULL;
-
-    // for(uint16_t i = 0; i < (size - 1); i++){
-    //     result->matrix_opt[i] = (uint8_t*)malloc(sizeof(uint8_t) * (i + 1));
-    //     if(result->matrix_opt[i] == NULL)
-    //     return NULL;
-    // }
-
-
-    // result->list = (struct connect*)malloc(sizeof(struct connect) * size);
-    // if(result->list == NULL)
-    //     return NULL;
-
 
     unsigned int seed;
     FILE *f = fopen("/dev/urandom", "rb");
@@ -101,7 +105,7 @@ struct graph* create_graph(uint16_t size, uint8_t conf){
         if(p > size)
             p %= size;
 
-        result->matrix[p][pn] = (rand_r(&seed) % 254) + 1;
+        result->matrix[p][pn] = (rand_r(&seed) % 0xfffe) + 1;
         result->matrix[pn][p] = result->matrix[p][pn];
 
         p += step;

@@ -8,7 +8,6 @@ int main(int argc, char** argv){
         perror("Too few arguments");
         return 1;
     }
-        
 
     return 0;
 }

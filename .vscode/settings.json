@@ -1,5 +1,17 @@
 {
     "files.associations": {
-        "numeric": "c"
+        "numeric": "c",
+        "chrono": "c",
+        "functional": "c",
+        "array": "c",
+        "bitset": "c",
+        "string_view": "c",
+        "format": "c",
+        "initializer_list": "c",
+        "ranges": "c",
+        "span": "c",
+        "valarray": "c",
+        "compare": "c",
+        "cstdint": "c"
     }
 }
