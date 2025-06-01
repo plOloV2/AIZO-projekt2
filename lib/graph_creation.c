@@ -3,6 +3,7 @@
 #include<stdint.h>
 #include<time.h>
 #include<omp.h>
+#include<string.h>
 #include"graph.h"
 #include"matrix_io.h"
 
@@ -43,7 +44,7 @@ struct graph** create_graph(uint16_t size){
     for(uint8_t i = 0; i < 3; i++){
 
         result[i] = (struct graph*)malloc(sizeof(struct graph));
-        if(result == NULL)
+        if(result[i] == NULL)
             return NULL;
 
         result[i]->matrix = (uint16_t**)malloc(sizeof(uint16_t*) * (size - 1));
@@ -69,15 +70,13 @@ struct graph** create_graph(uint16_t size){
     unsigned int seed;
     FILE *f = fopen("/dev/urandom", "rb");
     if(f != NULL){
-        if (fread(&seed, sizeof(seed), 1, f) != 1) {
-            //Read failed
+        if(fread(&seed, sizeof(seed), 1, f) != 1)   //Read failed
             seed = (unsigned int)time(NULL) + omp_get_thread_num();
-        }
+        
         fclose(f);
-    } else {
-        //File open failed
+    }else   //File open failed
         seed = (unsigned int)time(NULL) + omp_get_thread_num();
-    }
+    
 
     uint16_t step1 = find_step(size, &seed);
     uint16_t step2 = find_step(size, &seed);
@@ -174,7 +173,7 @@ struct graph** create_graph(uint16_t size){
 
     }
 
-    // function to create list from matrixes
+
 
     return result;
 

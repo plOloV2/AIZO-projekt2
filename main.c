@@ -9,5 +9,12 @@ int main(int argc, char** argv){
         return 1;
     }
 
+    struct graph** new = create_graph(10);
+
+    if(new == NULL)
+        return 2;
+
+    
+
     return 0;
 }
