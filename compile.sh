@@ -51,8 +51,15 @@ fi
 # Set file locations
 BIN_FILES_LOCATION="bin"
 
+# Collect all .c files from lib/ and algorithms/
+shopt -s nullglob
+LIB_FILES=(lib/*.c)
+ALGO_FILES=(algorithms/*.c)
+shopt -u nullglob
+
 # Set compiling flags for gcc
-FLAGS=(-fopenmp -lm lib/graph_creation.c)
+FLAGS=(-fopenmp -lm)
+FLAGS+=("${LIB_FILES[@]}" "${ALGO_FILES[@]}")
 
 # Set the source file and output binary names
 if $TEST; then
@@ -76,6 +83,8 @@ echo "Source file present"
 if $DEBUG; then
     FLAGS+=(-g)
     echo "Debug enabled."
+    echo "Included source files from lib/: ${LIB_FILES[*]}"
+    echo "Included source files from algorithms/: ${ALGO_FILES[*]}"
 fi
 
 mkdir -p "$BIN_FILES_LOCATION"

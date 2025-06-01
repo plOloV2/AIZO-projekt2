@@ -12,4 +12,4 @@ struct graph {
 
 uint16_t find_edge(uint16_t a, uint16_t b, void* graph, uint8_t type);
 
-void display_graphs(struct graph*, uint16_t size);
+// uint16_t count_edges(uint16_t a, void* graph, uint8_t type);

@@ -61,9 +61,9 @@ struct graph** create_graph(uint16_t size){
 
         }
 
-        result[i]->list = (struct connect**)malloc(sizeof(struct connect*) * size);
-        if(result[i]->list == NULL)
-            return NULL;
+        // result[i]->list = (struct connect**)malloc(sizeof(struct connect*) * size);
+        // if(result[i]->list == NULL)
+        //     return NULL;
 
     }
 
@@ -111,7 +111,7 @@ struct graph** create_graph(uint16_t size){
 
     }
 
-    uint16_t fill_per = (uint16_t)(0.25 * (size * (size - 1) / 2) - (size - 1));
+    uint16_t fill_per = (uint16_t)(0.25 * (size * (size - 1) / 2) - (size - 1)) + 1;
 
     do{
 
@@ -131,7 +131,7 @@ struct graph** create_graph(uint16_t size){
 
     }while(fill_per > 0);
 
-    fill_per = (uint16_t)(0.5 * (size * (size - 1) / 2) - (size - 1));
+    fill_per = (uint16_t)(0.5 * (size * (size - 1) / 2) - (size - 1)) + 1;
 
     do{
 
@@ -151,7 +151,7 @@ struct graph** create_graph(uint16_t size){
 
     }while(fill_per > 0);
 
-    for(uint16_t i = 0; i < size - 1; i++){
+    for(uint16_t i = 0; i < size; i++){
 
         for(uint16_t j = 0; j < i + 1; j++)
             set_value_matrix(result[2], i, j, (rand_r(&seed) % 0xfffe) + 1);
@@ -159,8 +159,9 @@ struct graph** create_graph(uint16_t size){
     }
 
     fill_per = (uint16_t)(0.01 * (size * (size - 1) / 2));
+    uint16_t removed = 0;
 
-    for(uint16_t i = 0; i < fill_per; i++){
+    while(removed < fill_per){
 
         uint16_t x = rand_r(&seed) % size;
         uint16_t y = rand_r(&seed) % size;
@@ -168,8 +169,11 @@ struct graph** create_graph(uint16_t size){
         while(y == x)
             y = rand_r(&seed) % size;
 
-        if(get_value_matrix(result[1], x, y) != 0)
+        if(get_value_matrix(result[2], x, y) != 0){
             set_value_matrix(result[2], x, y, 0);
+            removed++;
+        }
+            
 
     }
 
