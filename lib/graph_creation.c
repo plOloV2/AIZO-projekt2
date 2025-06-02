@@ -6,40 +6,11 @@
 #include<string.h>
 #include"graph.h"
 
-uint16_t gcd(uint16_t a, uint16_t b){
+uint16_t find_step(uint16_t size,  unsigned int* seed);
 
-    uint16_t temp;
+void add_edge_matrix(struct graph* graph, uint16_t start, uint16_t end, int16_t val, uint16_t edge_n);
 
-    while (b != 0){
-        temp = a % b;
-
-        a = b;
-        b = temp;
-
-    }
-
-    return a;
-
-}
-
-uint16_t find_step(uint16_t size,  unsigned int* seed){
-
-    uint16_t r;
-
-    do{
-        r = rand_r(seed) % (size - 1) + 1;
-    } while(gcd(r, size) != 1);
-        
-    return r;
-
-}
-
-void set_value_matrix(struct graph* graph, uint16_t start, uint16_t end, int16_t val, uint16_t edge_n){
-
-    graph->matrix[start][edge_n] = val;
-    graph->matrix[end][edge_n] = -val;
-
-}
+int16_t get_edge_matrix(struct graph* graph, uint16_t start, uint16_t end);
 
 struct graph** create_graph(uint16_t size){
 
@@ -59,16 +30,19 @@ struct graph** create_graph(uint16_t size){
             return NULL;
 
 
-        result[i]->undir_list = (struct edge**)malloc(sizeof(struct edge*) * size);
+        result[i]->undir_list = (struct edge**)malloc(sizeof(struct edge*));
         if(result[i]->undir_list == NULL)
             return NULL;
 
 
-        result[i]->suc_list = (struct edge**)malloc(sizeof(struct edge*) * size); 
+        result[i]->suc_list = (struct edge**)malloc(sizeof(struct edge*)); 
         if(result[i]->suc_list == NULL)
             return NULL;
 
+        result[i]->size = size;
+
     }
+
 
     unsigned int seed;
     FILE *f = fopen("/dev/urandom", "rb");
@@ -81,19 +55,20 @@ struct graph** create_graph(uint16_t size){
         seed = (unsigned int)time(NULL) + omp_get_thread_num();
     
 
+
     uint16_t step = find_step(size, &seed);
 
     uint16_t p = 0, pn = step;
 
-    result[0]->size = (uint16_t)((size * (size - 1) + 3) / 4);
+    result[0]->edges = (uint16_t)((size * (size - 1) + 3) / 4);
 
     for(uint16_t i = 0; i < size; i++){
 
-        result[0]->matrix[i] = (int16_t*)malloc(sizeof(int16_t) * result[0]->size);
+        result[0]->matrix[i] = (int16_t*)malloc(sizeof(int16_t) * result[0]->edges);
         if(result[0]->matrix[i] == NULL)
             return NULL;
 
-        memset(result[0]->matrix[i], 0, sizeof(int16_t) * result[0]->size);
+        memset(result[0]->matrix[i], 0, sizeof(int16_t) * result[0]->edges);
 
     }
 
@@ -105,10 +80,26 @@ struct graph** create_graph(uint16_t size){
         if(p > size)
             p %= size;
 
-        set_value_matrix(result[0], p, pn, (rand_r(&seed) % 32,766) + 1, i);
+        add_edge_matrix(result[0], p, pn, (rand_r(&seed) % 32766) + 1, i);
 
         p += step;
         pn += step;
+
+    }
+
+    for(uint16_t i = (size - 1); i < result[0]->edges; i++){
+
+        uint16_t x = rand_r(&seed) % size;
+        uint16_t y = rand_r(&seed) % size;
+
+        while(x == y)
+            y = rand_r(&seed) % size;
+
+        if(get_edge_matrix(result[0], x, y) == 0)
+            add_edge_matrix(result[0], x, y, (rand_r(&seed) % 32766) + 1, i);
+        
+        else 
+            i--;
 
     }
 
@@ -117,15 +108,15 @@ struct graph** create_graph(uint16_t size){
 
     p = 0, pn = step;
 
-    result[1]->size = (uint16_t)((size * (size - 1) + 1) / 2);
+    result[1]->edges = (uint16_t)((size * (size - 1) + 1) / 2);
 
     for(uint16_t i = 0; i < size; i++){
 
-        result[1]->matrix[i] = (int16_t*)malloc(sizeof(int16_t) * result[1]->size);
+        result[1]->matrix[i] = (int16_t*)malloc(sizeof(int16_t) * result[1]->edges);
         if(result[1]->matrix[i] == NULL)
             return NULL;
 
-        memset(result[1]->matrix[i], 0, sizeof(int16_t) * result[1]->size);
+        memset(result[1]->matrix[i], 0, sizeof(int16_t) * result[1]->edges);
 
     }
 
@@ -137,27 +128,100 @@ struct graph** create_graph(uint16_t size){
         if(p > size)
             p %= size;
 
-        set_value_matrix(result[1], p, pn, (rand_r(&seed) % 32,766) + 1, i);
+        add_edge_matrix(result[1], p, pn, (rand_r(&seed) % 32766) + 1, i);
 
         p += step;
         pn += step;
 
     }
 
+    for(uint16_t i = (size - 1); i < result[1]->edges; i++){
+
+        uint16_t x = rand_r(&seed) % size;
+        uint16_t y = rand_r(&seed) % size;
+
+        while(x == y)
+            y = rand_r(&seed) % size;
+
+        if(get_edge_matrix(result[1], x, y) == 0)
+            add_edge_matrix(result[1], x, y, (rand_r(&seed) % 32766) + 1, i);
+        
+        else 
+            i--;
+
+    }
+
     
-    result[2]->size = (uint16_t)((size * (size - 1)) * 99 + ((size * (size - 1)) * 99 + 99) / 100);
+    result[2]->edges = (uint16_t)((size * (size-1) * 99 + 99) / 100);
 
     for(uint16_t i = 0; i < size; i++){
 
-        result[2]->matrix[i] = (int16_t*)malloc(sizeof(int16_t) * result[2]->size);
+        result[2]->matrix[i] = (int16_t*)malloc(sizeof(int16_t) * result[2]->edges);
         if(result[2]->matrix[i] == NULL)
             return NULL;
 
         
-        memset(result[2]->matrix[i], 0, sizeof(int16_t) * result[2]->size);
+        memset(result[2]->matrix[i], 0, sizeof(int16_t) * result[2]->edges);
 
     }
 
+    step = size * (size-1) - result[2]->edges;
+    uint16_t nx[step], ny[step];
+
+    for(uint16_t i = 0; i < step; i++){
+
+        nx[i] = rand_r(&seed) % size;
+        ny[i] = rand_r(&seed) % size;
+
+        while(nx[i] == ny[i])
+            ny[i] = rand_r(&seed) % size;
+
+        
+        for(uint16_t j = 0; j < i; j++){
+
+            if(nx[j] == nx[i] && ny[j] == ny[i]){
+
+                nx[i] = rand_r(&seed) % size;
+                ny[i] = rand_r(&seed) % size;
+
+                while(nx[i] == ny[i])
+                    ny[i] = rand_r(&seed) % size;
+
+                j = 0;
+
+            }
+
+        }
+
+    }
+
+    for(uint16_t i = 0; i < result[2]->edges; i++){
+
+        for(uint16_t j = 0; j < size; j++){
+
+            for(uint16_t k = 0; k < size; k++){
+
+                p = 0;
+
+                for(uint16_t l = 0; l < step; l++){
+            
+                    if(j == nx[l] && k == ny[l]){
+                        p = 1;
+                        break;
+                    }
+
+                }
+                
+                if(j == k || p != 0)
+                    continue;
+
+                add_edge_matrix(result[2], j, k, (rand_r(&seed) % 32766) + 1, i);
+
+            }
+
+        }
+
+    }
 
 
     return result;

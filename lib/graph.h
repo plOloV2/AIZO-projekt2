@@ -8,8 +8,9 @@ struct edge {
 
 struct graph {
     uint16_t size;
+    uint16_t edges;
     int16_t** matrix;
-    struct edge* undir_list;
-    struct edfe* suc_list;
+    struct edge** undir_list;
+    struct edge** suc_list;
 };
 
