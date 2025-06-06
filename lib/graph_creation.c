@@ -6,6 +6,8 @@
 #include<string.h>
 #include"graph.h"
 
+#define INT16_MAX_VAL 0x7fff
+
 uint16_t find_step(uint16_t size,  unsigned int* seed);
 
 void add_edge_matrix(struct graph* graph, uint16_t start, uint16_t end, int16_t val, uint16_t edge_n);
@@ -27,16 +29,6 @@ struct graph** create_graph(uint16_t size){
 
         result[i]->matrix = (int16_t**)malloc(sizeof(int16_t*) * size);
         if(result[i]->matrix == NULL)
-            return NULL;
-
-
-        result[i]->undir_list = (struct edge**)malloc(sizeof(struct edge*));
-        if(result[i]->undir_list == NULL)
-            return NULL;
-
-
-        result[i]->suc_list = (struct edge**)malloc(sizeof(struct edge*)); 
-        if(result[i]->suc_list == NULL)
             return NULL;
 
         result[i]->size = size;
@@ -80,7 +72,7 @@ struct graph** create_graph(uint16_t size){
         if(p > size)
             p %= size;
 
-        add_edge_matrix(result[0], p, pn, (rand_r(&seed) % 32766) + 1, i);
+        add_edge_matrix(result[0], p, pn, (rand_r(&seed) % (INT16_MAX_VAL - 1)) + 1, i);
 
         p += step;
         pn += step;
@@ -96,7 +88,7 @@ struct graph** create_graph(uint16_t size){
             y = rand_r(&seed) % size;
 
         if(get_edge_matrix(result[0], x, y) == 0)
-            add_edge_matrix(result[0], x, y, (rand_r(&seed) % 32766) + 1, i);
+            add_edge_matrix(result[0], x, y, (rand_r(&seed) % (INT16_MAX_VAL - 1)) + 1, i);
         
         else 
             i--;
@@ -128,7 +120,7 @@ struct graph** create_graph(uint16_t size){
         if(p > size)
             p %= size;
 
-        add_edge_matrix(result[1], p, pn, (rand_r(&seed) % 32766) + 1, i);
+        add_edge_matrix(result[1], p, pn, (rand_r(&seed) % (INT16_MAX_VAL - 1)) + 1, i);
 
         p += step;
         pn += step;
@@ -144,7 +136,7 @@ struct graph** create_graph(uint16_t size){
             y = rand_r(&seed) % size;
 
         if(get_edge_matrix(result[1], x, y) == 0)
-            add_edge_matrix(result[1], x, y, (rand_r(&seed) % 32766) + 1, i);
+            add_edge_matrix(result[1], x, y, (rand_r(&seed) % (INT16_MAX_VAL - 1)) + 1, i);
         
         else 
             i--;
@@ -195,27 +187,28 @@ struct graph** create_graph(uint16_t size){
 
     }
 
-    for(uint16_t i = 0; i < result[2]->edges; i++){
+    pn = 0;
+    while(pn < result[2]->edges){
 
-        for(uint16_t j = 0; j < size; j++){
+        for(uint16_t i = 0; i < size; i++){
 
-            for(uint16_t k = 0; k < size; k++){
+            for(uint16_t j = 0; j < size; j++){
 
                 p = 0;
 
-                for(uint16_t l = 0; l < step; l++){
+                for(uint16_t k = 0; k < step; k++){
             
-                    if(j == nx[l] && k == ny[l]){
+                    if(i == nx[k] && j == ny[k]){
                         p = 1;
                         break;
                     }
 
                 }
                 
-                if(j == k || p != 0)
+                if(i == j || p != 0)
                     continue;
 
-                add_edge_matrix(result[2], j, k, (rand_r(&seed) % 32766) + 1, i);
+                add_edge_matrix(result[2], i, j, (rand_r(&seed) % (INT16_MAX_VAL - 1)) + 1, pn++);
 
             }
 
@@ -223,6 +216,129 @@ struct graph** create_graph(uint16_t size){
 
     }
 
+    for(uint8_t i = 0; i < 3; i++){
+
+        result[i]->undir_list = (struct edge**)malloc(sizeof(struct edge*) * result[i]->size);
+        if(result[i]->undir_list == NULL)
+            return NULL;
+
+        result[i]->suc_list = (struct edge**)malloc(sizeof(struct edge*) * result[i]->size); 
+        if(result[i]->suc_list == NULL)
+            return NULL;
+
+        for(uint16_t j = 0; j < result[i]->size; j++){
+
+            result[i]->undir_list[j] = NULL;
+            result[i]->suc_list[j] = NULL;
+            
+        }
+        
+        for(uint16_t j = 0; j < result[i]->edges; j++){
+
+            int16_t plus = 0;
+            int16_t plus_i = 0, minus_i = 0;
+
+            for(uint16_t k = 0; k < result[i]->size; k++){
+
+                if(result[i]->matrix[k][j] > 0){
+                    plus = result[i]->matrix[k][j];
+                    plus_i = k;
+                }
+
+                if(result[i]->matrix[k][j] < 0)
+                    minus_i = k;
+                
+
+            }
+
+            struct edge* beg = result[i]->suc_list[plus_i];
+            if (beg == NULL) {
+
+                beg = (struct edge*)malloc(sizeof(struct edge));
+
+                if (beg == NULL) 
+                    return NULL;
+
+                result[i]->suc_list[plus_i] = beg;
+            }
+            else {
+
+                while (beg->next != NULL) 
+                    beg = beg->next;
+                
+                beg->next = (struct edge*)malloc(sizeof(struct edge));
+
+                if (beg->next == NULL)
+                    return NULL;
+
+                beg = beg->next;
+
+            }
+
+
+            struct edge* beg_u = result[i]->undir_list[plus_i];
+            if (beg_u == NULL) {
+
+                beg_u = (struct edge*)malloc(sizeof(struct edge));
+
+                if (beg_u == NULL) 
+                    return NULL;
+
+                result[i]->undir_list[plus_i] = beg_u;
+            }
+            else {
+
+                while (beg_u->next != NULL) 
+                    beg_u = beg_u->next;
+                
+                beg_u->next = (struct edge*)malloc(sizeof(struct edge));
+
+                if (beg_u->next == NULL)
+                    return NULL;
+
+                beg_u = beg_u->next;
+                
+            }
+
+            struct edge* end_u = result[i]->undir_list[minus_i];
+            if (end_u == NULL) {
+
+                end_u = (struct edge*)malloc(sizeof(struct edge));
+
+                if (end_u == NULL) 
+                    return NULL;
+
+                result[i]->undir_list[minus_i] = end_u;
+            }
+            else {
+
+                while (end_u->next != NULL) 
+                    end_u = end_u->next;
+                
+                end_u->next = (struct edge*)malloc(sizeof(struct edge));
+
+                if (end_u->next == NULL)
+                    return NULL;
+
+                end_u = end_u->next;
+                
+            }
+
+            beg->target = minus_i;
+            beg_u->target = minus_i;
+            end_u->target = plus_i;
+
+            beg->weight = plus;
+            beg_u->weight = plus;
+            end_u->weight = plus;
+
+            beg->next = NULL;
+            beg_u->next = NULL;
+            end_u->next = NULL;
+
+        }
+
+    }
 
     return result;
 

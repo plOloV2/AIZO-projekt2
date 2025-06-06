@@ -1,11 +1,11 @@
 #!/bin/bash
 
 comp_time() {
-    local start=${EPOCHREALTIME/./}
+    local start=$(date +%s%3N)
     "$@"
     local exit_code=$?
-    local finish=${EPOCHREALTIME/./}
-    echo >&2 "Took ~$(( (finish - start) / 1000 )) ms."
+    local finish=$(date +%s%3N)
+    echo >&2 "Took ~$(( finish - start )) ms."
     return ${exit_code}
 }
 
