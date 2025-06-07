@@ -2,7 +2,7 @@
 
 struct edge {
     uint16_t target;
-    uint16_t weight;
+    int16_t weight;
     struct edge* next;
 };
 

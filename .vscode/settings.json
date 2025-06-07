@@ -13,6 +13,8 @@
         "valarray": "c",
         "compare": "c",
         "cstdint": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "stdint.h": "c",
+        "result_struct.h": "c"
     }
 }

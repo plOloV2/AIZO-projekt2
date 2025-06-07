@@ -2,6 +2,18 @@
 #include"lib/lib.h"
 #include"algorithms/algorithms.h"
 
+/*
+TO DO:
+-free_graph
+-free_result
+-Kruskal
+-Dijkstra
+-Ford-Bellman
+-Ford-Fulkerson
+-args handle (max = 257)
+-time mesurment
+-save to .csv
+*/
 
 void display_graphs(struct graph* graf);
 

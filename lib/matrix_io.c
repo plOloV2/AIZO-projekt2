@@ -1,4 +1,3 @@
-#include<stdint.h>
 #include"graph.h"
 
 void add_edge_matrix(struct graph* graph, uint16_t start, uint16_t end, int16_t val, uint16_t edge_n){
@@ -21,5 +20,19 @@ int16_t get_edge_matrix(struct graph* graph, uint16_t start, uint16_t end){
     }
 
     return 0;
+
+}
+
+int16_t dir_get_edge_matrix(struct graph* graph, uint16_t start, uint16_t end){
+
+    return get_edge_matrix(graph, start, end);
+
+}
+
+int16_t undir_get_edge_matrix(struct graph* graph, uint16_t start, uint16_t end){
+
+    int16_t result = get_edge_matrix(graph, start, end);
+
+    return result >= 0 ? result : -result;
 
 }
