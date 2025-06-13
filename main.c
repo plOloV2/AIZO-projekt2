@@ -4,15 +4,13 @@
 
 /*
 TO DO:
--free_graph
--free_result
--Kruskal
 -Dijkstra
 -Ford-Bellman
 -Ford-Fulkerson
 -args handle (max = 257)
 -time mesurment
 -save to .csv
+-check EVERYTHING
 */
 
 void display_graphs(struct graph* graf);
@@ -20,7 +18,7 @@ void display_graphs(struct graph* graf);
 int main(int argc, char** argv){
 
     if(argc < 2){
-        printf("Too few arguments");
+        fprintf(stderr, "Too few arguments");
         return 1;
     }
 
@@ -35,6 +33,8 @@ int main(int argc, char** argv){
     display_graphs(new[1]);
     printf("\ngraf3: \n");
     display_graphs(new[2]);
+
+    free_graph(new);
 
     return 0;
 }
