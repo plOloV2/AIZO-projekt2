@@ -1,3 +1,6 @@
+#ifndef GRAPH_H
+#define GRAPH_H
+
 #include<stdint.h>
 
 struct edge {
@@ -14,3 +17,4 @@ struct graph {
     struct edge** suc_list;     // directed list
 };
 
+#endif

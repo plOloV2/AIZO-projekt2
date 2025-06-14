@@ -15,6 +15,7 @@
         "cstdint": "c",
         "cstdlib": "c",
         "stdint.h": "c",
-        "result_struct.h": "c"
+        "result_struct.h": "c",
+        "graph.h": "c"
     }
 }

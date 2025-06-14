@@ -1,3 +1,6 @@
+#ifndef RESULT_STRUCT_H
+#define RESULT_STRUCT_H
+
 #include<stdint.h>
 
 struct result{
@@ -6,3 +9,5 @@ struct result{
     int16_t weight;             // weight of edge
     struct result* next;        // pointer to next edge
 };
+
+#endif
