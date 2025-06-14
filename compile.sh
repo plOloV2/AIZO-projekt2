@@ -60,6 +60,7 @@ shopt -u nullglob
 # Set compiling flags for gcc
 FLAGS=(-fopenmp -lm)
 FLAGS+=("${LIB_FILES[@]}" "${ALGO_FILES[@]}")
+FLAGS+=(-Wall -Wextra -Werror)
 
 # Set the source file and output binary names
 if $TEST; then

@@ -1,4 +1,5 @@
 #include<stdio.h>
+#include<stdlib.h>
 #include"lib/lib.h"
 #include"algorithms/algorithms.h"
 
@@ -22,26 +23,35 @@ int main(int argc, char** argv){
         return 1;
     }
 
-    struct graph** new = create_graph(11);
 
-    if(new == NULL)
-        return 2;
+    for(uint8_t i = 1; i < argc; i++){
 
-    printf("graf1: \n");
-    display_graphs(new[0]);
-    printf("\ngraf2: \n");
-    display_graphs(new[1]);
-    printf("\ngraf3: \n");
-    display_graphs(new[2]);
+        uint16_t ammount = atoi(argv[i]);
 
-    struct result* prime = Prim(new[0], undir_get_edge_list);
+        struct graph** new = create_graph(ammount);
 
-    struct result* kruskal = Kruskal(new[0], undir_get_edge_list);
+        if(new == NULL)
+            return 2;
 
-    free_result(prime);
-    free_result(kruskal);
+        printf("graf1: \n");
+        display_graphs(new[0]);
+        printf("\ngraf2: \n");
+        display_graphs(new[1]);
+        printf("\ngraf3: \n");
+        display_graphs(new[2]);
 
-    free_graph(new);
+        struct result* prime = Prim(new[0], undir_get_edge_list);
+
+        struct result* kruskal = Kruskal(new[0], undir_get_edge_list);
+
+        free_result(prime);
+        free_result(kruskal);
+
+        free_graph(new);
+
+    }
+
+    
 
     return 0;
 }
