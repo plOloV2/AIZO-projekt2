@@ -34,6 +34,13 @@ int main(int argc, char** argv){
     printf("\ngraf3: \n");
     display_graphs(new[2]);
 
+    struct result* prime = Prim(new[0], undir_get_edge_list);
+
+    struct result* kruskal = Kruskal(new[0], undir_get_edge_list);
+
+    free_result(prime);
+    free_result(kruskal);
+
     free_graph(new);
 
     return 0;

@@ -4,6 +4,10 @@
 #include<string.h>
 #include<stdlib.h>
 
+
+void free_result(struct result* result);
+
+
 struct result* Prim(struct graph* graph, int16_t (*find_edge)(struct graph*, uint16_t, uint16_t)){
 
     struct result* head = NULL;
@@ -26,6 +30,7 @@ struct result* Prim(struct graph* graph, int16_t (*find_edge)(struct graph*, uin
         
         int16_t min_weight = INT16_MAX;
         uint16_t best_u = 0, best_v = 0;
+        uint8_t found_edge = 0;
 
         for (uint16_t u = 0; u < graph->size; u++){
 
@@ -39,10 +44,17 @@ struct result* Prim(struct graph* graph, int16_t (*find_edge)(struct graph*, uin
 
                 int16_t w = find_edge(graph, u, v);
 
-                if(w > 0 && w < min_weight){
+                if(w == 0)
+                    continue;
+
+                found_edge = 1;
+
+                if(w < min_weight){
+
                     min_weight = w;
                     best_u = u;
                     best_v = v;
+
                 }
 
             }
@@ -50,9 +62,12 @@ struct result* Prim(struct graph* graph, int16_t (*find_edge)(struct graph*, uin
         }
 
 
-        if(min_weight == INT16_MAX){
+        if(!found_edge){
 
             fprintf(stderr, "Disconnected graph (Prim's)\n");
+            free_result(head);
+            head = NULL;
+            tail = NULL;
             free(visited);
             return NULL;
 
@@ -63,8 +78,11 @@ struct result* Prim(struct graph* graph, int16_t (*find_edge)(struct graph*, uin
         if(!node){
             
             fprintf(stderr, "NODE alloc failed (Prim's)\n");
+            free_result(head);
+            head = NULL;
+            tail = NULL;
             free(visited);
-            return head;
+            return NULL;
 
         }
 
