@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<omp.h>
 #include"lib/lib.h"
 #include"algorithms/algorithms.h"
 
@@ -23,35 +24,53 @@ int main(int argc, char** argv){
         return 1;
     }
 
+    uint8_t err = 0;
+
 
     for(uint8_t i = 1; i < argc; i++){
 
         uint16_t ammount = atoi(argv[i]);
 
-        struct graph** new = create_graph(ammount);
+        if(ammount > 257){
 
-        if(new == NULL)
-            return 2;
+            fprintf(stderr, "Argument too big. Max size: 257.\nContinueing to next arg...");
+            continue;
 
-        printf("graf1: \n");
-        display_graphs(new[0]);
-        printf("\ngraf2: \n");
-        display_graphs(new[1]);
-        printf("\ngraf3: \n");
-        display_graphs(new[2]);
+        }
 
-        struct result* prime = Prim(new[0], undir_get_edge_list);
+        #pragma omp parallel for
+        for(uint8_t i = 0; i < 100; i++){
 
-        struct result* kruskal = Kruskal(new[0], undir_get_edge_list);
+            struct graph** new = create_graph(ammount);
 
-        free_result(prime);
-        free_result(kruskal);
+            if(new == NULL)
+                err = 2;
 
-        free_graph(new);
+            printf("graf1: \n");
+            display_graphs(new[0]);
+            printf("\ngraf2: \n");
+            display_graphs(new[1]);
+            printf("\ngraf3: \n");
+            display_graphs(new[2]);
+
+            struct result* prime = Prim(new[0], undir_get_edge_list);
+
+            struct result* kruskal = Kruskal(new[0], undir_get_edge_list);
+
+            struct result* dijkstra = Dijkstra(new[0], undir_get_edge_list);
+
+            free_result(prime);
+            free_result(kruskal);
+            free_result(dijkstra);
+
+            free_graph(new);
+
+        }       
 
     }
 
-    
+    if(err != 0)
+        return 2;
 
     return 0;
 }

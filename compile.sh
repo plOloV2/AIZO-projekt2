@@ -59,7 +59,6 @@ shopt -u nullglob
 
 # Set compiling flags for gcc
 FLAGS=(-fopenmp -lm)
-FLAGS+=("${LIB_FILES[@]}" "${ALGO_FILES[@]}")
 FLAGS+=(-Wall -Wextra -Werror)
 
 # Set the source file and output binary names
@@ -102,6 +101,8 @@ if $OPTIMIZE; then
 fi
 
 echo "Compiling program with flags: ${FLAGS[@]}"
+
+FLAGS+=("${LIB_FILES[@]}" "${ALGO_FILES[@]}")
 
 comp_time gcc "$SOURCE_FILE" -o "$BIN_FILES_LOCATION/$OUTPUT_BINARY" "${FLAGS[@]}"
     

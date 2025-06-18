@@ -7,4 +7,6 @@ struct result* Prim(struct graph* graph, int16_t (*find_edge)(struct graph*, uin
 
 struct result* Kruskal(struct graph* graph, int16_t (*find_edge)(struct graph*, uint16_t, uint16_t));
 
+struct result* Dijkstra(struct graph* graph, int16_t (*find_edge)(struct graph*, uint16_t, uint16_t));
+
 #endif
