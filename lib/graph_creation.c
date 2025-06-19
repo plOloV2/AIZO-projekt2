@@ -6,16 +6,31 @@
 #include<string.h>
 #include"graph.h"
 
+
 uint16_t find_step(uint16_t size,  unsigned int* seed);
 
-void add_edge_matrix(struct graph* graph, uint16_t start, uint16_t end, int16_t val, uint16_t edge_n);
 
-int16_t get_edge_matrix(struct graph* graph, uint16_t start, uint16_t end);
+int16_t get_edge_matrix(int16_t** matrix, uint16_t start, uint16_t end, uint32_t edges){
+    
+    for(uint32_t i = 0; i < edges; i++){
+
+        if(matrix[start][i] == 0)
+            continue;
+
+        if(matrix[end][i] != 0)
+            return matrix[start][i];
+
+    }
+
+    return 0;
+
+}
+
 
 struct graph** create_graph(uint16_t size){
 
-    struct graph** result = (struct graph**)malloc(sizeof(struct graph*) * 3);
-    if(result == NULL){
+    struct graph** result = malloc(sizeof(struct graph*) * 3);
+    if(!result){
 
         fprintf(stderr, "Failed to initialize RESULT table (create_graph)\n");
         return NULL;
@@ -24,8 +39,8 @@ struct graph** create_graph(uint16_t size){
 
     for(uint8_t i = 0; i < 3; i++){
 
-        result[i] = (struct graph*)malloc(sizeof(struct graph));
-        if(result[i] == NULL){
+        result[i] = calloc(1, sizeof(struct graph));
+        if(!result[i]){
 
             fprintf(stderr, "Failed to initialize RESULT[%i] table (create_graph)\n", i);
             return NULL;
@@ -33,10 +48,18 @@ struct graph** create_graph(uint16_t size){
         }
 
 
-        result[i]->matrix = (int16_t**)malloc(sizeof(int16_t*) * size);
-        if(result[i]->matrix == NULL){
+        result[i]->undir_matrix = malloc(sizeof(int16_t*) * size);
+        if(!result[i]->undir_matrix){
 
-            fprintf(stderr, "Failed to initialize RESULT[%i]->MATRIX** table (create_graph)\n", i);
+            fprintf(stderr, "Failed to initialize RESULT[%i]->undir_matrix** table (create_graph)\n", i);
+            return NULL;
+
+        }
+
+        result[i]->dir_matrix = malloc(sizeof(int16_t*) * size);
+        if(!result[i]->dir_matrix){
+
+            fprintf(stderr, "Failed to initialize RESULT[%i]->dir_matrix** table (create_graph)\n", i);
             return NULL;
 
         }
@@ -46,351 +69,135 @@ struct graph** create_graph(uint16_t size){
     }
 
 
+    // densities of created graphs
+    const uint8_t dens_pct[3] = {25, 50, 99};
+
+
     unsigned int seed;
-    FILE *f = fopen("/dev/urandom", "rb");
-    if(f != NULL){
-        if(fread(&seed, sizeof(seed), 1, f) != 1)   //Read failed
-            seed = (unsigned int)time(NULL) + omp_get_thread_num();
-        
+    FILE* f = fopen("/dev/urandom", "rb");
+    if(f && fread(&seed, sizeof(seed), 1, f) == 1){
+
         fclose(f);
-    }else   //File open failed
+
+    } else{
+
+        if(f)
+            fclose(f);
+        
         seed = (unsigned int)time(NULL) + omp_get_thread_num();
-    
-
-
-    uint16_t step = find_step(size, &seed);
-
-    uint16_t p = 0, pn = step;
-
-    result[0]->edges = (uint16_t)((size * (size - 1) + 3) / 4);
-
-    for(uint16_t i = 0; i < size; i++){
-
-        result[0]->matrix[i] = (int16_t*)malloc(sizeof(int16_t) * result[0]->edges);
-        if(result[0]->matrix[i] == NULL){
-
-            fprintf(stderr, "Failed to initialize RESULT[0]->MATRIX[%i]* table (create_graph)\n", i);
-            return NULL;
-
-        }
-
-        memset(result[0]->matrix[i], 0, sizeof(int16_t) * result[0]->edges);
 
     }
 
-    for(uint16_t i = 0; i < (size - 1); i++){
-
-        if(pn > size)
-            pn %= size;
-
-        if(p > size)
-            p %= size;
-
-        add_edge_matrix(result[0], p, pn, (rand_r(&seed) % (INT16_MAX - 1)) + 1, i);
-
-        p += step;
-        pn += step;
-
-    }
-
-    for(uint16_t i = (size - 1); i < result[0]->edges; i++){
-
-        uint16_t x = rand_r(&seed) % size;
-        uint16_t y = rand_r(&seed) % size;
-
-        while(x == y)
-            y = rand_r(&seed) % size;
-
-        if(get_edge_matrix(result[0], x, y) == 0)
-            add_edge_matrix(result[0], x, y, (rand_r(&seed) % (INT16_MAX - 1)) + 1, i);
-        
-        else 
-            i--;
-
-    }
-
-
-    step = find_step(size, &seed);
-
-    p = 0, pn = step;
-
-    result[1]->edges = (uint16_t)((size * (size - 1) + 1) / 2);
-
-    for(uint16_t i = 0; i < size; i++){
-
-        result[1]->matrix[i] = (int16_t*)malloc(sizeof(int16_t) * result[1]->edges);
-        if(result[1]->matrix[i] == NULL){
-
-            fprintf(stderr, "Failed to initialize RESULT[1]->MATRIX[%i]* table (create_graph)\n", i);
-            return NULL;
-
-        }
-
-        memset(result[1]->matrix[i], 0, sizeof(int16_t) * result[1]->edges);
-
-    }
-
-    for(uint16_t i = 0; i < (size - 1); i++){
-
-        if(pn > size)
-            pn %= size;
-
-        if(p > size)
-            p %= size;
-
-        add_edge_matrix(result[1], p, pn, (rand_r(&seed) % (INT16_MAX - 1)) + 1, i);
-
-        p += step;
-        pn += step;
-
-    }
-
-    for(uint16_t i = (size - 1); i < result[1]->edges; i++){
-
-        uint16_t x = rand_r(&seed) % size;
-        uint16_t y = rand_r(&seed) % size;
-
-        while(x == y)
-            y = rand_r(&seed) % size;
-
-        if(get_edge_matrix(result[1], x, y) == 0)
-            add_edge_matrix(result[1], x, y, (rand_r(&seed) % (INT16_MAX - 1)) + 1, i);
-        
-        else 
-            i--;
-
-    }
-
-    
-    result[2]->edges = (uint16_t)((size * (size-1) * 99 + 99) / 100);
-
-    for(uint16_t i = 0; i < size; i++){
-
-        result[2]->matrix[i] = (int16_t*)malloc(sizeof(int16_t) * result[2]->edges);
-        if(result[2]->matrix[i] == NULL){
-
-            fprintf(stderr, "Failed to initialize RESULT[2]->MATRIX[%i]* table (create_graph)\n", i);
-            return NULL;
-
-        }
-
-        
-        memset(result[2]->matrix[i], 0, sizeof(int16_t) * result[2]->edges);
-
-    }
-
-    step = size * (size-1) - result[2]->edges;
-    uint16_t nx[step], ny[step];
-
-    for(uint16_t i = 0; i < step; i++){
-
-        nx[i] = rand_r(&seed) % size;
-        ny[i] = rand_r(&seed) % size;
-
-        while(nx[i] == ny[i])
-            ny[i] = rand_r(&seed) % size;
-
-        
-        for(uint16_t j = 0; j < i; j++){
-
-            if(nx[j] == nx[i] && ny[j] == ny[i]){
-
-                nx[i] = rand_r(&seed) % size;
-                ny[i] = rand_r(&seed) % size;
-
-                while(nx[i] == ny[i])
-                    ny[i] = rand_r(&seed) % size;
-
-                j = 0;
-
-            }
-
-        }
-
-    }
-
-    pn = 0;
-    while(pn < result[2]->edges){
-
-        for(uint16_t i = 0; i < size; i++){
-
-            for(uint16_t j = 0; j < size; j++){
-
-                p = 0;
-
-                for(uint16_t k = 0; k < step; k++){
-            
-                    if(i == nx[k] && j == ny[k]){
-                        p = 1;
-                        break;
-                    }
-
-                }
-                
-                if(i == j || p != 0)
-                    continue;
-
-                add_edge_matrix(result[2], i, j, (rand_r(&seed) % (INT16_MAX - 1)) + 1, pn++);
-
-            }
-
-        }
-
-    }
 
     for(uint8_t i = 0; i < 3; i++){
 
-        result[i]->undir_list = (struct edge**)malloc(sizeof(struct edge*) * result[i]->size);
-        if(result[i]->undir_list == NULL){
+        // calculates number of edges
+        result[i]->edges = ((size * (size - 1)) * dens_pct[i] + 99) / 100;
 
-            fprintf(stderr, "Failed to initialize RESULT[%i]->UNDIR_LIST** table (create_graph)\n", i);
-            return NULL;
+        // allocates rest of matrix
+        for(uint16_t r = 0; r < size; r++){
+
+            result[i]->dir_matrix[r] = calloc(result[i]->edges, sizeof(int16_t));
+            if(!result[i]->dir_matrix[r]){
+
+                fprintf(stderr, "Failed to allocate dir_matrix[%d][%d] (create_graph)\n", i, r);
+                return NULL;
+
+            }
+
+            result[i]->undir_matrix[r] = calloc(result[i]->edges / 2, sizeof(int16_t));
+            if(!result[i]->undir_matrix[r]){
+
+                fprintf(stderr, "Failed to allocate undir_matrix[%d][%d] (create_graph)\n", i, r);
+                return NULL;
+
+            }
 
         }
 
-        result[i]->suc_list = (struct edge**)malloc(sizeof(struct edge*) * result[i]->size); 
-        if(result[i]->suc_list == NULL){
 
-            fprintf(stderr, "Failed to initialize RESULT[%i]->SUC_LIST** table (create_graph)\n", i);
-            return NULL;
+        // step is used to create path, that connects every vertex together
+        // prevents disconected graphs
+        uint16_t step = find_step(size, &seed);
+        uint16_t p = 0, pn = step;
+
+        for(uint16_t j = 0; j < size - 1; j++){
+
+            pn %= size;
+            p %= size;
+
+            int16_t val = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
+
+            result[i]->dir_matrix[p][j] = val;
+            result[i]->dir_matrix[pn][j] = -val;
+            
+            p += step;
+            pn += step;
 
         }
 
-        for(uint16_t j = 0; j < result[i]->size; j++){
+        // fills rest of matrix with random edges
+        for(uint16_t j = size - 1; j < result[i]->edges; j++){
 
-            result[i]->undir_list[j] = NULL;
-            result[i]->suc_list[j] = NULL;
+            uint16_t x = rand_r(&seed) % size;
+            uint16_t y = rand_r(&seed) % size;
+
+            while(x == y)
+                y = rand_r(&seed) % size;
+
+            if(get_edge_matrix(result[i]->dir_matrix, x, y, result[i]->edges) == 0){
+
+                int16_t val = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
+
+                result[i]->dir_matrix[p][j] = val;
+                result[i]->dir_matrix[pn][j] = -val;
+
+            }else 
+                j--;
             
         }
-        
-        for(uint16_t j = 0; j < result[i]->edges; j++){
 
-            int16_t plus = 0;
-            int16_t plus_i = 0, minus_i = 0;
+        // repeated code for creating undirected graph
+        uint16_t step = find_step(size, &seed);
+        uint16_t p = 0, pn = step;
 
-            for(uint16_t k = 0; k < result[i]->size; k++){
+        for(uint16_t j = 0; j < size - 1; j++){
 
-                if(result[i]->matrix[k][j] > 0){
-                    plus = result[i]->matrix[k][j];
-                    plus_i = k;
-                }
+            pn %= size;
+            p %= size;
 
-                if(result[i]->matrix[k][j] < 0)
-                    minus_i = k;
-                
-            }
+            int16_t val = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
+
+            result[i]->undir_matrix[p][j] = val;
+            result[i]->undir_matrix[pn][j] = val;
             
-
-            struct edge* beg = result[i]->suc_list[plus_i];
-            if(beg == NULL){
-
-                beg = (struct edge*)malloc(sizeof(struct edge));
-
-                if(beg == NULL){
-
-                    fprintf(stderr, "Failed to inicialize RESULT[%i]->SUC_LIST[%i]* table (create_graph)\n", i, plus_i);
-                    return NULL;
-
-                }
-
-                result[i]->suc_list[plus_i] = beg;
-            }
-            else {
-
-                while(beg->next != NULL) 
-                    beg = beg->next;
-                
-                beg->next = (struct edge*)malloc(sizeof(struct edge));
-
-                if(beg->next == NULL){
-
-                    fprintf(stderr, "Failed to initialize RESULT[%i]->SUC_LIST[%i]* table (create_graph)\n", i, plus_i);
-                    return NULL;
-
-                }
-
-                beg = beg->next;
-
-            }
-
-
-            struct edge* beg_u = result[i]->undir_list[plus_i];
-            if(beg_u == NULL){
-
-                beg_u = (struct edge*)malloc(sizeof(struct edge));
-
-                if(beg_u == NULL){
-
-                    fprintf(stderr, "Failed to initialize RESULT[%i]->UNDIR_LIST[%i]* begin table (create_graph)\n", i, plus_i);
-                    return NULL;
-
-                }
-
-                result[i]->undir_list[plus_i] = beg_u;
-            }
-            else {
-
-                while(beg_u->next != NULL) 
-                    beg_u = beg_u->next;
-                
-                beg_u->next = (struct edge*)malloc(sizeof(struct edge));
-
-                if(beg_u->next == NULL){
-
-                    fprintf(stderr, "Failed to initialize RESULT[%i]->UNDIR_LIST[%i]* begin table (create_graph)\n", i, plus_i);
-                    return NULL;
-
-                }
-
-                beg_u = beg_u->next;
-                
-            }
-
-            struct edge* end_u = result[i]->undir_list[minus_i];
-            if(end_u == NULL){
-
-                end_u = (struct edge*)malloc(sizeof(struct edge));
-
-                if (end_u == NULL){
-
-                    fprintf(stderr, "Failed to initialize RESULT[%i]->UNDIR_LIST[%i]* end table (create_graph)\n", i, plus_i);
-                    return NULL;
-
-                }
-
-                result[i]->undir_list[minus_i] = end_u;
-            }
-            else {
-
-                while(end_u->next != NULL) 
-                    end_u = end_u->next;
-                
-                end_u->next = (struct edge*)malloc(sizeof(struct edge));
-
-                if(end_u->next == NULL){
-
-                    fprintf(stderr, "Failed to initialize RESULT[%i]->UNDIR_LIST[%i]* end table (create_graph)\n", i, plus_i);
-                    return NULL;
-
-                }
-
-                end_u = end_u->next;
-                
-            }
-
-            beg->target = minus_i;
-            beg_u->target = minus_i;
-            end_u->target = plus_i;
-
-            beg->weight = plus;
-            beg_u->weight = plus;
-            end_u->weight = plus;
-
-            beg->next = NULL;
-            beg_u->next = NULL;
-            end_u->next = NULL;
+            p += step;
+            pn += step;
 
         }
+
+        // fills rest of matrix with random edges
+        for(uint16_t j = size - 1; j < result[i]->edges / 2; j++){
+
+            uint16_t x = rand_r(&seed) % size;
+            uint16_t y = rand_r(&seed) % size;
+
+            while(x == y)
+                y = rand_r(&seed) % size;
+
+            if(get_edge_matrix(result[i]->undir_matrix, x, y, result[i]->edges / 2) == 0){
+
+                int16_t val = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
+
+                result[i]->undir_matrix[p][j] = val;
+                result[i]->undir_matrix[pn][j] = val;
+
+            }else 
+                j--;
+            
+        }
+
+        // code that takes matrix representation and makes list representation
 
     }
 

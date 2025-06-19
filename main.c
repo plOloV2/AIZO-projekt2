@@ -6,10 +6,8 @@
 
 /*
 TO DO:
--Dijkstra
 -Ford-Bellman
 -Ford-Fulkerson
--args handle (max = 257)
 -time mesurment
 -save to .csv
 -check EVERYTHING
@@ -31,15 +29,15 @@ int main(int argc, char** argv){
 
         uint16_t ammount = atoi(argv[i]);
 
-        if(ammount > 257){
+        if(ammount > 65866){
 
-            fprintf(stderr, "Argument too big. Max size: 257.\nContinueing to next arg...");
+            fprintf(stderr, "Argument too big. Max size: 65866 .\nContinueing to next arg...");
             continue;
 
         }
 
-        #pragma omp parallel for
-        for(uint8_t i = 0; i < 100; i++){
+        // #pragma omp parallel for
+        // for(uint8_t i = 0; i < 100; i++){
 
             struct graph** new = create_graph(ammount);
 
@@ -53,11 +51,11 @@ int main(int argc, char** argv){
             printf("\ngraf3: \n");
             display_graphs(new[2]);
 
-            struct result* prime = Prim(new[0], undir_get_edge_list);
+            struct result* prime = Prim(new[0], 0);
 
-            struct result* kruskal = Kruskal(new[0], undir_get_edge_list);
+            struct result* kruskal = Kruskal(new[0], 0);
 
-            struct result* dijkstra = Dijkstra(new[0], undir_get_edge_list);
+            struct result* dijkstra = Dijkstra(new[0], 0);
 
             free_result(prime);
             free_result(kruskal);
@@ -65,7 +63,7 @@ int main(int argc, char** argv){
 
             free_graph(new);
 
-        }       
+        // }       
 
     }
 

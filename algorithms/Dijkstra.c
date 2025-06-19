@@ -7,7 +7,7 @@
 
 void free_result(struct result* result);
 
-struct result* Dijkstra(struct graph* graph, int16_t (*find_edge)(struct graph*, uint16_t, uint16_t)){
+struct result* Dijkstra(struct graph* graph, uint8_t mode){
 
     struct result* head = NULL;
     struct result* tail = NULL;

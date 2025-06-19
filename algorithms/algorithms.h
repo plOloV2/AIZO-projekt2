@@ -3,10 +3,14 @@
 
 #include"../lib/result_struct.h"
 
-struct result* Prim(struct graph* graph, int16_t (*find_edge)(struct graph*, uint16_t, uint16_t));
+struct result* Prim(struct graph* graph, uint8_t mode);
 
-struct result* Kruskal(struct graph* graph, int16_t (*find_edge)(struct graph*, uint16_t, uint16_t));
+struct result* Kruskal(struct graph* graph, uint8_t mode);
 
-struct result* Dijkstra(struct graph* graph, int16_t (*find_edge)(struct graph*, uint16_t, uint16_t));
+struct result* Dijkstra(struct graph* graph, uint8_t mode);
+
+struct result* Ford_Bellman(struct graph* graph, uint8_t mode);
+
+struct result* Ford_Fulkerson(struct graph* graph, uint8_t mode);
 
 #endif

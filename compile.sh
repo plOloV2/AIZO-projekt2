@@ -15,6 +15,7 @@ CLEAN=false
 HELP=false
 OPTIMIZE=false
 TEST=false
+IGNORE=true
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -d|--debug)
@@ -29,6 +30,9 @@ while [[ $# -gt 0 ]]; do
         -t|--test)
             TEST=true
             shift;;
+        -i|--ignore-errors)
+            IGNORE=false
+            shift ;;
         -h|--help)
             HELP=true
             shift;;
@@ -40,10 +44,11 @@ done
 
 if $HELP; then
     echo "Script to compile this project with gcc. All available flags:
-    -d / --debug    ->  adds -g to gcc flags
-    -c / --clean    ->  cleans /bin directory
-    -t / --test     ->  builds test version of project
-    -O / --optimize ->  adds optimalization flags such as -O3, -march, ... 
+    -d / --debug            ->  adds -g to gcc flags
+    -c / --clean            ->  cleans /bin directory
+    -t / --test             ->  builds test version of project
+    -O / --optimize         ->  adds optimalization flags such as -O3, -march, ...
+    -i / --ignore-errors    ->  ignores errors during compile
     "
     exit 0
 fi
@@ -59,7 +64,10 @@ shopt -u nullglob
 
 # Set compiling flags for gcc
 FLAGS=(-fopenmp -lm)
-FLAGS+=(-Wall -Wextra -Werror)
+
+if $IGNORE; then
+    FLAGS+=(-Wall -Wextra -Werror)
+fi
 
 # Set the source file and output binary names
 if $TEST; then

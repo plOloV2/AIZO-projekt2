@@ -11,8 +11,9 @@ struct edge {
 
 struct graph {
     uint16_t size;              // number of vertexes
-    uint16_t edges;             // number of edges
-    int16_t** matrix;           // incident matrix
+    uint32_t edges;             // number of edges
+    int16_t** dir_matrix;       // directed incident matrix
+    int16_t** undir_matrix;     // undirected incident matrix
     struct edge** undir_list;   // undirected list
     struct edge** suc_list;     // directed list
 };

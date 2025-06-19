@@ -4,12 +4,12 @@
 
 void display_graphs(struct graph* graf){
 
-    printf("\nMaciez:\n");
+    printf("\nMaciez nieskierowana:\n");
 
     for(uint16_t i = 0; i < graf->size; i++){
 
         for(uint16_t j = 0; j < graf->edges; j++)
-            printf("%i;", graf->matrix[i][j]);
+            printf("%i;", graf->undir_matrix[i][j]);
 
         printf("\n");
 

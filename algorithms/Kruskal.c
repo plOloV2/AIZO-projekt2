@@ -1,8 +1,8 @@
-#include "../lib/graph.h"
-#include "../lib/result_struct.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include"../lib/graph.h"
+#include"../lib/result_struct.h"
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
 
 
 struct edge_info {
