@@ -27,11 +27,18 @@ int main(int argc, char** argv){
 
     for(uint8_t i = 1; i < argc; i++){
 
-        uint16_t ammount = atoi(argv[i]);
+        uint32_t ammount = atoi(argv[i]);
 
         if(ammount > 65866){
 
             fprintf(stderr, "Argument too big. Max size: 65866 .\nContinueing to next arg...");
+            continue;
+
+        }
+
+        if(ammount < 15){
+
+            fprintf(stderr, "Argument too smll. Min size: 15 .\nContinueing to next arg...");
             continue;
 
         }

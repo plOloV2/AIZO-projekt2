@@ -19,6 +19,7 @@
         "graph.h": "c",
         "stdio.h": "c",
         "stdlib.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "random": "c"
     }
 }

@@ -10,13 +10,23 @@ void free_graph(struct graph** graphs){
         if (graphs[i] == NULL) 
             continue;
 
-        // Free matrix
-        if(graphs[i]->matrix != NULL){
+        // Free dir_matrix
+        if(graphs[i]->dir_matrix != NULL){
 
             for(uint16_t row = 0; row < graphs[i]->size; row++)
-                free(graphs[i]->matrix[row]);
+                free(graphs[i]->dir_matrix[row]);
             
-            free(graphs[i]->matrix);
+            free(graphs[i]->dir_matrix);
+
+        }
+
+        // Free undir_matrix
+        if(graphs[i]->undir_matrix != NULL){
+
+            for(uint16_t row = 0; row < graphs[i]->size; row++)
+                free(graphs[i]->undir_matrix[row]);
+            
+            free(graphs[i]->undir_matrix);
 
         }
 
@@ -40,12 +50,12 @@ void free_graph(struct graph** graphs){
 
         }
 
-        // Free successor adjacency lists
-        if(graphs[i]->suc_list != NULL){
+        // Free directed adjacency lists
+        if(graphs[i]->dir_list != NULL){
 
             for(uint16_t j = 0; j < graphs[i]->size; j++){
 
-                struct edge* current = graphs[i]->suc_list[j];
+                struct edge* current = graphs[i]->dir_list[j];
 
                 while(current != NULL){
 
@@ -57,7 +67,7 @@ void free_graph(struct graph** graphs){
 
             }
 
-            free(graphs[i]->suc_list);
+            free(graphs[i]->dir_list);
 
         }
 
