@@ -19,4 +19,13 @@ struct graph {
     struct edge** dir_list;     // directed list
 };
 
+/*
+    - in matrix representation and in lists firs dimention of array is of size of graph
+    - both matrix representations second array dimention is respective number of edges
+    - values represented inside matrixes are weights of edges
+    - edge inside directed incident matrix is mark with positive value at start edge index and negative at end index
+    - in undirected incident matrix both values are positive
+    - lists hold same graphs as their matrix counterparts
+*/
+
 #endif

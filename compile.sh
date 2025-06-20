@@ -64,9 +64,10 @@ shopt -u nullglob
 
 # Set compiling flags for gcc
 FLAGS=(-fopenmp -lm)
+FLAGS+=(-Wall -Wextra)
 
 if $IGNORE; then
-    FLAGS+=(-Wall -Wextra -Werror)
+    FLAGS+=(-Werror)
 fi
 
 # Set the source file and output binary names

@@ -6,14 +6,9 @@
 
 /*
 TO DO:
--Ford-Bellman
 -Ford-Fulkerson
--time mesurment
--save to .csv
 -check EVERYTHING
 */
-
-void display_graphs(struct graph* graf);
 
 int main(int argc, char** argv){
 
@@ -27,50 +22,78 @@ int main(int argc, char** argv){
 
     for(uint8_t i = 1; i < argc; i++){
 
-        uint32_t ammount = atoi(argv[i]);
+        uint16_t amount = atoi(argv[i]);
 
-        if(ammount > 65866){
-
-            fprintf(stderr, "Argument too big. Max size: 65866 .\nContinueing to next arg...");
-            continue;
-
-        }
-
-        if(ammount < 15){
+        if(amount < 15){
 
             fprintf(stderr, "Argument too smll. Min size: 15 .\nContinueing to next arg...");
             continue;
 
         }
 
-        // #pragma omp parallel for
-        // for(uint8_t i = 0; i < 100; i++){
+        double times[5][3][2][100];
+        double data_time_avg = 0;
 
-            struct graph** new = create_graph(ammount);
+        #pragma omp parallel for
+        for(uint8_t i = 0; i < 100; i++){
+
+            double data_creation_time = omp_get_wtime();
+
+            struct graph** new = create_graph(amount);
+
+            data_creation_time = omp_get_wtime() - data_creation_time;
+
+            #pragma omp atomic
+                data_time_avg += data_creation_time;
 
             if(new == NULL)
                 err = 2;
 
-            printf("graf1: \n");
-            display_graphs(new[0]);
-            printf("\ngraf2: \n");
-            display_graphs(new[1]);
-            printf("\ngraf3: \n");
-            display_graphs(new[2]);
+            for(uint8_t j = 0; j < 3; j++){
 
-            struct result* prime = Prim(new[0], 0);
+                uint8_t error;
 
-            struct result* kruskal = Kruskal(new[0], 0);
+                error = measure_time(new[j], 1, &times[prim][j][0][i], &times[prim][j][1][i], Prim);
 
-            struct result* dijkstra = Dijkstra(new[0], 0);
+                if(error)
+                    fprintf(stderr, "Error %i in Prim's, i = %i, j = %i\n", error, i, j);
+                
 
-            free_result(prime);
-            free_result(kruskal);
-            free_result(dijkstra);
+                error = measure_time(new[j], 1, &times[kruskal][j][0][i], &times[kruskal][j][1][i], Kruskal);
+                
+                if(error)
+                    fprintf(stderr, "Error %i in Kruskal, i = %i, j = %i\n", error, i, j);
+
+
+                error = measure_time(new[j], 0, &times[dijkstra][j][0][i], &times[dijkstra][j][1][i], Dijkstra);
+                
+                if(error)
+                    fprintf(stderr, "Error %i in Dijkstra, i = %i, j = %i\n", error, i, j);
+
+
+                error = measure_time(new[j], 0, &times[ford_bellman][j][0][i], &times[ford_bellman][j][1][i], Ford_Bellman);
+                
+                if(error)
+                    fprintf(stderr, "Error %i in Ford-Bellman, i = %i, j = %i\n", error, i, j);
+
+
+                error = measure_time(new[j], 0, &times[ford_fulkerson][j][0][i], &times[ford_fulkerson][j][1][i], Ford_Fulkerson);
+                
+                if(error)
+                    fprintf(stderr, "Error %i in Ford-Bellman, i = %i, j = %i\n", error, i, j);
+
+            }
+            
 
             free_graph(new);
 
-        // }       
+        }
+
+        save_times(times, amount);
+
+        data_time_avg /= 100;
+
+        printf("Average time to create graphs of size %i: %f s\n", amount, data_time_avg);
 
     }
 

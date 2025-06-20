@@ -20,9 +20,11 @@ static int compare_edges(const void* a, const void* b){
     const struct edge_info* edge1 = (const struct edge_info*)a;
     const struct edge_info* edge2 = (const struct edge_info*)b;
 
-    if (edge1->weight < edge2->weight) return -1;
+    if(edge1->weight < edge2->weight) 
+        return -1;
 
-    if (edge1->weight > edge2->weight) return 1;
+    if(edge1->weight > edge2->weight) 
+        return 1;
 
     return 0;
 
@@ -46,22 +48,25 @@ uint16_t union_find(uint16_t* union_tab, uint16_t u){
     }
     
     return root;
-}
-
-
-void union_connect(uint16_t* union_tab, uint16_t u, uint16_t v){
-
-    union_tab[union_find(union_tab, u)] = union_find(union_tab, v);
 
 }
 
 
-struct result* Kruskal(struct graph* graph, int16_t (*find_edge)(struct graph*, uint16_t, uint16_t)){
+void union_connect(uint16_t* parent, uint16_t u, uint16_t v){
+
+    uint16_t ru = union_find(parent, u);
+    uint16_t rv = union_find(parent, v);
+    parent[ru] = rv;
+
+}
+
+
+struct result* Kruskal(struct graph* graph, uint8_t mode){
 
     struct result* head = NULL;
     struct result* tail = NULL;
 
-    struct edge_info* edges_sorted = malloc(sizeof(struct edge_info) * graph->edges);
+    struct edge_info* edges_sorted = malloc(sizeof(struct edge_info) * graph->undir_edges);
     if(!edges_sorted){
 
         fprintf(stderr, "Failed to allocate edge array (Kruskal)\n");
@@ -69,17 +74,48 @@ struct result* Kruskal(struct graph* graph, int16_t (*find_edge)(struct graph*, 
 
     }
 
-    uint16_t id = 0;
+    uint32_t id = 0;
 
     for(uint16_t u = 0; u < graph->size; u++){
         for(uint16_t v = u + 1; v < graph->size; v++){
 
-            int16_t weigh = find_edge(graph, u, v);
+            int16_t w = 0;
 
-            if(weigh == 0)
+            if(mode == 0){
+                // lookup in incidence matrix
+                for(uint32_t e_i = 0; e_i < graph->undir_edges; e_i++){
+
+                    if(graph->undir_matrix[u][e_i] > 0 && graph->undir_matrix[v][e_i] > 0){
+
+                        w = graph->undir_matrix[u][e_i];
+                        break;
+
+                    }
+
+                }
+
+            }else {
+                // lookup in adjacency list
+                struct edge* e = graph->undir_list[u];
+                while(e){
+
+                    if(e->target == v){
+
+                        w = e->weight;
+                        break;
+
+                    }
+
+                    e = e->next;
+
+                }
+
+            }
+
+            if(w == 0)
                 continue;
 
-            if(id >= graph->edges){
+            if(id >= graph->undir_edges){
 
                 fprintf(stderr, "Edge count mismatch (Kruskal)\n");
                 free(edges_sorted);
@@ -87,11 +123,8 @@ struct result* Kruskal(struct graph* graph, int16_t (*find_edge)(struct graph*, 
 
             }
 
-            edges_sorted[id].u = u;
-            edges_sorted[id].v = v;
-            edges_sorted[id].weight = weigh;
-
-            id++;
+          
+            edges_sorted[id++] = (struct edge_info){.u = u, .v = v, .weight = w};
 
         }
 
@@ -104,50 +137,53 @@ struct result* Kruskal(struct graph* graph, int16_t (*find_edge)(struct graph*, 
     for(uint16_t i = 0; i < graph->size; i++)
         union_tab[i] = i;
 
-    uint16_t total_edges = id;
-    id = 0;
+    uint16_t used = 0;
 
-    for(uint16_t i = 0; i < graph->size - 1; i++){
+    for(uint32_t i = 0; i < id && used < graph->size - 1; i++){
 
-        while(id < total_edges && union_find(union_tab, edges_sorted[id].u) == union_find(union_tab, edges_sorted[id].v))
-            id++;
+        uint16_t u = edges_sorted[i].u;
+        uint16_t v = edges_sorted[i].v;
 
-        if(id == total_edges){
-
-            fprintf(stderr, "Disconnected graph (Kruskal)\n");
-            free_result(head);
-            head = NULL;
-            tail = NULL;
-            free(edges_sorted);
-            return NULL;
-
-        }
-
-        struct result* node = malloc(sizeof(struct result));
-        if(!node){
+        if(union_find(union_tab, u) != union_find(union_tab, v)){
             
-            fprintf(stderr, "NODE alloc failed (Kruskal)\n");
-            free_result(head);
-            head = NULL;
-            tail = NULL;
-            free(edges_sorted);
-            return NULL;
+            union_connect(union_tab, u, v);
+
+            struct result* node = malloc(sizeof(*node));
+            if(!node){
+
+                fprintf(stderr, "NODE alloc failed (Kruskal)");
+                free(edges_sorted);
+                free_result(head);
+                return NULL;
+
+            }
+
+            node->start = u;
+            node->end = v;
+            node->weight = edges_sorted[i].weight;
+            node->next = NULL;
+
+            if(!head)
+                head = tail = node;
+            else{
+
+                tail->next = node;
+                tail = node;
+
+            }
+
+            used++;
 
         }
 
-        union_connect(union_tab, edges_sorted[id].u, edges_sorted[id].v);
+    }
 
-        node->start = edges_sorted[id].u;
-        node->end = edges_sorted[id].v;
-        node->weight = edges_sorted[id].weight;
-        node->next = NULL;
+    // If we didn't pick enough edges, graph was disconnected
+    if(used != graph->size - 1){
 
-        if(!head){
-            head = tail = node;
-        }else {
-            tail->next = node;
-            tail = node;
-        }
+        fprintf(stderr, "Disconnected graph (Kruskal)\n");
+        free_result(head);
+        head = NULL;
 
     }
 

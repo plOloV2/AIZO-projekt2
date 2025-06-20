@@ -8,8 +8,8 @@ struct graph** create_graph(uint16_t size);
 
 void free_graph(struct graph** graph);
 
-void free_result(struct result* result);
+uint8_t measure_time(struct graph* graph, uint8_t comp_mode, double* t1, double* t2, struct result* (*alg)(struct graph*, uint8_t));
 
-uint8_t compare_results(struct result *a, struct result *b);
+void save_times(double times[5][3][2][100], uint16_t ammount);
 
 #endif

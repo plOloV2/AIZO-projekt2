@@ -8,21 +8,18 @@
 void free_result(struct result* result);
 
 
-struct result* Prim(struct graph* graph, int16_t (*find_edge)(struct graph*, uint16_t, uint16_t)){
+struct result* Prim(struct graph* graph, uint8_t mode){
 
     struct result* head = NULL;
     struct result* tail = NULL;
 
-    uint8_t* visited = (uint8_t*)malloc(sizeof(uint8_t) * graph->size);
+    uint8_t* visited = calloc(graph->size, sizeof(uint8_t));
     if (visited == NULL){
 
         fprintf(stderr, "Failed to inicialize VISITED table (Prim's)\n");
         return NULL;
 
     }
-        
-
-    memset(visited, 0, sizeof(uint8_t) * graph->size);
 
     visited[0] = 1;
 
@@ -32,17 +29,48 @@ struct result* Prim(struct graph* graph, int16_t (*find_edge)(struct graph*, uin
         uint16_t best_u = 0, best_v = 0;
         uint8_t found_edge = 0;
 
-        for (uint16_t u = 0; u < graph->size; u++){
+        for(uint16_t u = 0; u < graph->size; u++){
 
-            if (visited[u] == 0)
+            if(!visited[u])
                 continue;
             
-            for (uint16_t v = 0; v < graph->size; v++){
+            for(uint16_t v = 0; v < graph->size; v++){
 
-                if (visited[v] == 1)
+                if(visited[v])
                     continue;
 
-                int16_t w = find_edge(graph, u, v);
+                int16_t w = 0;
+
+                if(mode == 0){
+                    // Use undirected incident matrix
+                    for(uint32_t e_idx = 0; e_idx < graph->undir_edges; e_idx++){
+
+                        if(graph->undir_matrix[u][e_idx] > 0 && graph->undir_matrix[v][e_idx] > 0){
+
+                            w = graph->undir_matrix[u][e_idx];
+                            break;
+
+                        }
+
+                    }
+
+                }else{
+                    // Use undirected adjacency list
+                    struct edge* e = graph->undir_list[u];
+                    while(e){
+
+                        if(e->target == v){
+
+                            w = e->weight;
+                            break;
+
+                        }
+
+                        e = e->next;
+
+                    }
+
+                }
 
                 if(w == 0)
                     continue;
@@ -65,11 +93,7 @@ struct result* Prim(struct graph* graph, int16_t (*find_edge)(struct graph*, uin
         if(!found_edge){
 
             fprintf(stderr, "Disconnected graph (Prim's)\n");
-            free_result(head);
-            head = NULL;
-            tail = NULL;
-            free(visited);
-            return NULL;
+            break;
 
         }
         
@@ -107,3 +131,4 @@ struct result* Prim(struct graph* graph, int16_t (*find_edge)(struct graph*, uin
     return head;
 
 }
+

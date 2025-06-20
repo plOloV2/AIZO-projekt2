@@ -8,9 +8,9 @@
 void free_result(struct result* result);
 
 
-struct result* Ford_Fulkerson(struct graph* graph, int16_t (*find_edge)(struct graph*, uint16_t, uint16_t)){
+struct result* Ford_Fulkerson(struct graph* graph, uint8_t mode){
 
- struct result* head = NULL;
+    struct result* head = NULL;
     struct result* tail = NULL;
     struct result** node_array = malloc(sizeof(struct result*) * graph->size);
     
@@ -53,6 +53,10 @@ struct result* Ford_Fulkerson(struct graph* graph, int16_t (*find_edge)(struct g
     }
 
     node_array[0]->weight = 0;
+
+
+    if(mode)
+        mode = 0;
 
     return head;
 

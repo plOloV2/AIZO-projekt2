@@ -10,4 +10,8 @@ struct result{
     struct result* next;        // pointer to next edge
 };
 
+void free_result(struct result* result);
+
+uint8_t compare_results(uint8_t mode, struct result *a, struct result *b);
+
 #endif

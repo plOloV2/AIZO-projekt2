@@ -30,7 +30,7 @@ void display_graphs(struct graph* graf){
 
     for(uint16_t i = 0; i < graf->size; i++){
 
-        printf("\nVertex %d: ", i);
+        printf("Vertex %d: ", i);
 
         struct edge* dis = graf->undir_list[i];
 
@@ -50,7 +50,7 @@ void display_graphs(struct graph* graf){
 
     for(uint16_t i = 0; i < graf->size; i++){
 
-        printf("\nVertex %d: ", i);
+        printf("Vertex %d: ", i);
         
         struct edge* dis = graf->dir_list[i];
         
