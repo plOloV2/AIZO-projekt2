@@ -16,7 +16,7 @@ for cpu in 4 5 6 7; do
 done
 
 echo "Launching project on cores 4-7..."
-taskset -c 4-7 bin/apk
+taskset -c 4-7 bin/apk 128 256 512 1024 2048 4096 8192
 EXIT_STATUS=$?
 
 echo "Computation completed. Exit code $EXIT_STATUS"
