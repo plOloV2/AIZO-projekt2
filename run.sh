@@ -7,7 +7,7 @@ trap 'echo "Restoring ondemand governor..."; \
      for cpu in 4 5 6 7; do sudo cpufreq-set -c $cpu -g ondemand; done' EXIT
 
 echo "Compiling project..."
-./compile.sh -O -c -i
+./compile.sh -O -c
 
 echo "Setting CPU frequency for cores 4-7 to 1.8GHz..."
 for cpu in 4 5 6 7; do
