@@ -20,6 +20,7 @@
         "stdio.h": "c",
         "stdlib.h": "c",
         "string.h": "c",
-        "random": "c"
+        "random": "c",
+        "variant": "c"
     }
 }

@@ -14,7 +14,7 @@ void save_times(double times[5][3][2][100], uint16_t ammount){
     for(int a = 0; a < 5; a++){
 
         char filename[256];
-        snprintf(filename, sizeof(filename), "%s_%d.csv", alg_names[a], ammount);
+        snprintf(filename, sizeof(filename), "data/%s_%d.csv", alg_names[a], ammount);
 
         FILE *file = fopen(filename, "w");
         if(file == NULL){

@@ -12,9 +12,6 @@ struct edge_info {
 };
 
 
-void free_result(struct result* result);
-
-
 static int compare_edges(const void* a, const void* b){
 
     const struct edge_info* edge1 = (const struct edge_info*)a;

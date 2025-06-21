@@ -22,6 +22,11 @@ int main(int argc, char** argv){
 
     for(uint8_t i = 1; i < argc; i++){
 
+        uint8_t progres = 0;
+
+        printf("\rProgress: %i%%\n", progres);
+        fflush(stdout);
+
         uint16_t amount = atoi(argv[i]);
 
         if(amount < 15){
@@ -34,7 +39,7 @@ int main(int argc, char** argv){
         double times[5][3][2][100];
         double data_time_avg = 0;
 
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for(uint8_t i = 0; i < 100; i++){
 
             double data_creation_time = omp_get_wtime();
@@ -80,16 +85,34 @@ int main(int argc, char** argv){
                 error = measure_time(new[j], 0, &times[ford_fulkerson][j][0][i], &times[ford_fulkerson][j][1][i], Ford_Fulkerson);
                 
                 if(error)
-                    fprintf(stderr, "Error %i in Ford-Bellman, i = %i, j = %i\n", error, i, j);
+                    fprintf(stderr, "Error %i in Ford-Fulkerson, i = %i, j = %i\n", error, i, j);
 
             }
             
 
             free_graph(new);
 
+            #pragma omp atomic
+            progres++;
+
+            if(omp_get_thread_num() % 4 == 0){
+
+                #pragma omp critical
+                {
+                    
+                    printf("\rProgress: %i%%\n", progres);
+                    fflush(stdout);
+
+                }
+                
+            }
+
         }
 
         save_times(times, amount);
+
+        printf("\rProgress: 100%%\n");
+        fflush(stdout);
 
         data_time_avg /= 100;
 

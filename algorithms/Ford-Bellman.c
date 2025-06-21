@@ -4,9 +4,6 @@
 #include<stdlib.h>
 #include<string.h>
 
-
-void free_result(struct result* result);
-
 struct result* Ford_Bellman(struct graph* graph, uint8_t mode){
 
     struct result* head = NULL;

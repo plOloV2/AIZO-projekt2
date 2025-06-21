@@ -55,6 +55,7 @@ fi
 
 # Set file locations
 BIN_FILES_LOCATION="bin"
+CSV_FILES_LOCATION="data"
 
 # Collect all .c files from lib/ and algorithms/
 shopt -s nullglob
@@ -97,6 +98,7 @@ if $DEBUG; then
 fi
 
 mkdir -p "$BIN_FILES_LOCATION"
+mkdir -p "$CSV_FILES_LOCATION"
 
 if $CLEAN; then
     echo "Cleaning build directory"

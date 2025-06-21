@@ -5,9 +5,6 @@
 #include<stdlib.h>
 
 
-void free_result(struct result* result);
-
-
 struct result* Prim(struct graph* graph, uint8_t mode){
 
     struct result* head = NULL;

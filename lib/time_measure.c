@@ -5,6 +5,8 @@
 
 uint8_t measure_time(struct graph* graph, uint8_t comp_mode, double* t1, double* t2, struct result* (*alg)(struct graph*, uint8_t)){
 
+    uint8_t err = 0;
+
     double time1, time2;
 
 
@@ -15,7 +17,7 @@ uint8_t measure_time(struct graph* graph, uint8_t comp_mode, double* t1, double*
     time1 = omp_get_wtime() - time1;
 
     if(!r1)
-        return 1;
+        err += 1;
 
 
     time2 = omp_get_wtime();
@@ -25,12 +27,12 @@ uint8_t measure_time(struct graph* graph, uint8_t comp_mode, double* t1, double*
     time2 = omp_get_wtime() - time2;
 
     if(!r2)
-        return 2;
+        err += 2;
 
 
-    if(!compare_results(comp_mode, r1, r2)){
+    if(!compare_results(comp_mode, r1, r2) || err != 0){
 
-        time1 = time2 = 0;
+        time1 = time2 = -1;
         fprintf(stderr, "Something failed...\n");
 
     }
@@ -42,6 +44,6 @@ uint8_t measure_time(struct graph* graph, uint8_t comp_mode, double* t1, double*
     *t1 = time1 * 1000;
     *t2 = time2 * 1000;
 
-    return 0;
+    return err;
     
 }

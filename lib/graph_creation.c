@@ -10,37 +10,6 @@
 uint16_t find_step(uint16_t size,  unsigned int* seed);
 
 
-int16_t get_edge_u(int16_t** matrix, uint16_t start, uint16_t end, uint32_t edges){
-    
-    for(uint32_t i = 0; i < edges; i++){
-
-        if(matrix[start][i] == 0)
-            continue;
-
-        if(matrix[end][i] != 0)
-            return matrix[start][i];
-
-    }
-
-    return 0;
-
-}
-
-
-int16_t get_edge_d(int16_t** matrix, uint16_t start, uint16_t end, uint32_t edges){
-
-    for(uint32_t i = 0; i < edges; i++){
-
-        if(matrix[start][i] > 0 && matrix[end][i] < 0) 
-            return matrix[start][i];
-
-    }
-
-    return 0;
-
-}
-
-
 struct graph** create_graph(uint16_t size){
 
     struct graph** result = malloc(sizeof(struct graph*) * 3);
@@ -131,6 +100,17 @@ struct graph** create_graph(uint16_t size){
         }
 
 
+        // Optimized directed graph creation with bitset
+        size_t dir_bitset_bytes = ((size_t)size * size + 7) / 8;
+        uint8_t *dir_exists = calloc(1, dir_bitset_bytes);
+        if(!dir_exists){
+
+            fprintf(stderr, "Failed to allocate dir_exists bitset (create_graph)\n");
+            return NULL;
+
+        }
+
+
         // step is used to create path, that connects every vertex together
         // prevents disconected graphs
         uint16_t step = find_step(size, &seed);
@@ -145,6 +125,9 @@ struct graph** create_graph(uint16_t size){
 
             result[i]->dir_matrix[p][j] = val;
             result[i]->dir_matrix[pn][j] = -val;
+
+            uint32_t index = (uint32_t)p * size + pn;
+            dir_exists[index / 8] |= (1 << (index % 8));
             
             p += step;
             pn += step;
@@ -160,16 +143,35 @@ struct graph** create_graph(uint16_t size){
             while(x == y)
                 y = rand_r(&seed) % size;
 
-            if(get_edge_d(result[i]->dir_matrix, x, y, result[i]->dir_edges) == 0){
+            uint32_t index = (uint32_t)x * size + y;
+
+            if(dir_exists[index / 8] & (1 << (index % 8))){
+
+                j--;
+
+            }else {
 
                 int16_t val = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
 
                 result[i]->dir_matrix[x][j] = val;
                 result[i]->dir_matrix[y][j] = -val;
 
-            }else 
-                j--;
+                dir_exists[index / 8] |= (1 << (index % 8));
+
+            }
             
+        }
+
+        free(dir_exists);
+
+        // Optimized undirected graph creation with bitset
+        size_t undir_bitset_bytes = ((size_t)size * size + 7) / 8;
+        uint8_t *undir_exists = calloc(1, undir_bitset_bytes);
+        if(!undir_exists){
+
+            fprintf(stderr, "Failed to allocate undir_exists bitset (create_graph)\n");
+            return NULL;
+
         }
 
         // repeated code for creating undirected graph
@@ -186,6 +188,11 @@ struct graph** create_graph(uint16_t size){
 
             result[i]->undir_matrix[p][j] = val;
             result[i]->undir_matrix[pn][j] = val;
+
+            uint16_t u1 = p < pn ? p : pn;
+            uint16_t v1 = p < pn ? pn : p;
+            uint32_t index = (uint32_t)u1 * size + v1;
+            undir_exists[index / 8] |= (1 << (index % 8));
             
             p += step;
             pn += step;
@@ -201,18 +208,28 @@ struct graph** create_graph(uint16_t size){
             while(x == y)
                 y = rand_r(&seed) % size;
 
-            if(get_edge_u(result[i]->undir_matrix, x, y, result[i]->undir_edges) == 0){
+            uint16_t u1 = x < y ? x : y;
+            uint16_t v1 = x < y ? y : x;
+            uint32_t index = (uint32_t)u1 * size + v1;
+
+            if(undir_exists[index / 8] & (1 << (index % 8))){
+
+                j--;
+
+            }else {
 
                 int16_t val = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
 
                 result[i]->undir_matrix[x][j] = val;
                 result[i]->undir_matrix[y][j] = val;
 
-            }else 
-                j--;
+                undir_exists[index / 8] |= (1 << (index % 8));
+
+            }
             
         }
 
+        free(undir_exists);
 
         // code that takes matrix representation and makes list representation
         result[i]->dir_list = malloc(sizeof(struct edge*) * size);
