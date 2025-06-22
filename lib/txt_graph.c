@@ -4,6 +4,45 @@
 #include <string.h>
 #include "graph.h"
 
+/*
+    ---   POPRAWNY FORMAT PLIKU Z GRAFEM   ---
+
+rozmiar = V
+skierowane_krawedzie = Es
+v0 u0 w0
+... 
+vEs uEs wEs
+nieskierowane_krawedzie = En
+v0 u0 w0
+... 
+vEn uEn wEn
+
+    ---   PRZYKŁAD   ---
+
+rozmiar = 5
+skierowane_krawedzie = 11
+0 1 10
+0 2 5
+1 2 2
+1 3 1
+2 1 3
+2 3 9
+2 4 2
+3 2 8
+4 0 3
+4 3 6
+3 4 7
+nieskierowane_krawedzie = 7
+0 1 1
+0 2 3
+1 2 4
+1 3 2
+2 3 5
+2 4 6
+3 4 4
+
+*/
+
 // funcja odczytująca graf z pliku
 struct graph* read_graph(const char* filename){
 
@@ -19,7 +58,7 @@ struct graph* read_graph(const char* filename){
     uint32_t dir_edges, undir_edges;
 
     // wczytanie rozmiaru grafu
-    if(fscanf(file, "size = %hu\n", &size) != 1){
+    if(fscanf(file, "rozmiar = %hu\n", &size) != 1){
 
         fprintf(stderr, "Niepoprawny format rozmiaru grafu\n");
         fclose(file);
@@ -28,7 +67,7 @@ struct graph* read_graph(const char* filename){
     }
 
     // wczytanie ilości skierowanych krawędzi
-    if(fscanf(file, "directed_edges = %u\n", &dir_edges) != 1){
+    if(fscanf(file, "skierowane_krawedzie = %u\n", &dir_edges) != 1){
 
         fprintf(stderr, "Niepoprawny format ilosci skierowanych krawedzi\n");
         fclose(file);
@@ -40,7 +79,7 @@ struct graph* read_graph(const char* filename){
     struct graph* g = calloc(1, sizeof(struct graph));
     if(!g){
 
-        fprintf(stderr, "Bład alokacji grafu\n");
+        fprintf(stderr, "Blad alokacji grafu\n");
         fclose(file);
         return NULL;
 
@@ -55,8 +94,10 @@ struct graph* read_graph(const char* filename){
 
     if(!dir_sources || !dir_targets || !dir_weights){
 
-        fprintf(stderr, "Failed to allocate directed edge arrays\n");
-        free(dir_sources); free(dir_targets); free(dir_weights);
+        fprintf(stderr, "Blad alokacji tablic dla grafu skierowanego\n");
+        free(dir_sources);
+        free(dir_targets);
+        free(dir_weights);
         free(g);
         fclose(file);
         return NULL;
@@ -68,8 +109,10 @@ struct graph* read_graph(const char* filename){
 
         if(fscanf(file, "%hu %hu %hd\n", &dir_sources[i], &dir_targets[i], &dir_weights[i]) != 3){
             
-            fprintf(stderr, "Error reading directed edge %u\n", i);
-            free(dir_sources); free(dir_targets); free(dir_weights);
+            fprintf(stderr, "Blad odczytu skierowanej krawedzi %u\n", i);
+            free(dir_sources);
+            free(dir_targets);
+            free(dir_weights);
             free(g);
             fclose(file);
             return NULL;
@@ -79,10 +122,12 @@ struct graph* read_graph(const char* filename){
     }
 
     // wczytanie ilości skierowanych krawędzi
-    if(fscanf(file, "undirected_edges = %u\n", &undir_edges) != 1){
+    if(fscanf(file, "nieskierowane_krawedzie = %u\n", &undir_edges) != 1){
 
-        fprintf(stderr, "Invalid undirected edges format\n");
-        free(dir_sources); free(dir_targets); free(dir_weights);
+        fprintf(stderr, "Niepoprawny format ilosci nieskierowanych krawedzi\n");
+        free(dir_sources);
+        free(dir_targets);
+        free(dir_weights);
         free(g);
         fclose(file);
         return NULL;
@@ -97,9 +142,13 @@ struct graph* read_graph(const char* filename){
 
     if(!undir_u || !undir_v || !undir_weights){
 
-        fprintf(stderr, "Failed to allocate undirected edge arrays\n");
-        free(dir_sources); free(dir_targets); free(dir_weights);
-        free(undir_u); free(undir_v); free(undir_weights);
+        fprintf(stderr, "Blad alokacji tablic dla grafu nieskierowanego\n");
+        free(dir_sources);
+        free(dir_targets);
+        free(dir_weights);
+        free(undir_u);
+        free(undir_v);
+        free(undir_weights);
         free(g);
         fclose(file);
         return NULL;
@@ -111,9 +160,13 @@ struct graph* read_graph(const char* filename){
 
         if(fscanf(file, "%hu %hu %hd\n", &undir_u[i], &undir_v[i], &undir_weights[i]) != 3){
 
-            fprintf(stderr, "Error reading undirected edge %u\n", i);
-            free(dir_sources); free(dir_targets); free(dir_weights);
-            free(undir_u); free(undir_v); free(undir_weights);
+            fprintf(stderr, "Blad odczytu skierowanej krawedzi %u\n", i);
+            free(dir_sources);
+            free(dir_targets);
+            free(dir_weights);
+            free(undir_u);
+            free(undir_v);
+            free(undir_weights);
             free(g);
             fclose(file);
             return NULL;
@@ -128,9 +181,13 @@ struct graph* read_graph(const char* filename){
     g->dir_matrix = malloc(size * sizeof(int16_t*));
     if(!g->dir_matrix){
 
-        fprintf(stderr, "Failed to allocate dir_matrix\n");
-        free(dir_sources); free(dir_targets); free(dir_weights);
-        free(undir_u); free(undir_v); free(undir_weights);
+        fprintf(stderr, "Blad alokacji dir_matrix\n");
+        free(dir_sources);
+        free(dir_targets);
+        free(dir_weights);
+        free(undir_u);
+        free(undir_v);
+        free(undir_weights);
         free(g);
         return NULL;
 
@@ -140,11 +197,19 @@ struct graph* read_graph(const char* filename){
 
         g->dir_matrix[i] = calloc(dir_edges, sizeof(int16_t));
         if(!g->dir_matrix[i]){
-            fprintf(stderr, "Failed to allocate dir_matrix[%u]\n", i);
-            for (uint16_t j = 0; j < i; j++) free(g->dir_matrix[j]);
+
+            fprintf(stderr, "Blad alokacji dir_matrix[%u]\n", i);
+
+            for(uint16_t j = 0; j < i; j++) 
+                free(g->dir_matrix[j]);
+
             free(g->dir_matrix);
-            free(dir_sources); free(dir_targets); free(dir_weights);
-            free(undir_u); free(undir_v); free(undir_weights);
+            free(dir_sources);
+            free(dir_targets);
+            free(dir_weights);
+            free(undir_u);
+            free(undir_v); 
+            free(undir_weights);
             free(g);
             return NULL;
 
@@ -164,11 +229,18 @@ struct graph* read_graph(const char* filename){
     g->undir_matrix = malloc(size * sizeof(int16_t*));
     if(!g->undir_matrix){
 
-        fprintf(stderr, "Failed to allocate undir_matrix\n");
-        for (uint16_t i = 0; i < size; i++) free(g->dir_matrix[i]);
+        fprintf(stderr, "Blad alokacji undir_matrix\n");
+
+        for(uint16_t i = 0; i < size; i++)
+            free(g->dir_matrix[i]);
+
         free(g->dir_matrix);
-        free(dir_sources); free(dir_targets); free(dir_weights);
-        free(undir_u); free(undir_v); free(undir_weights);
+        free(dir_sources);
+        free(dir_targets);
+        free(dir_weights);
+        free(undir_u);
+        free(undir_v);
+        free(undir_weights);
         free(g);
         return NULL;
 
@@ -179,13 +251,23 @@ struct graph* read_graph(const char* filename){
         g->undir_matrix[i] = calloc(undir_edges, sizeof(int16_t));
 
         if(!g->undir_matrix[i]){
-            fprintf(stderr, "Failed to allocate undir_matrix[%u]\n", i);
-            for (uint16_t j = 0; j < size; j++) free(g->dir_matrix[j]);
+            fprintf(stderr, "Blad alokacji undir_matrix[%u]\n", i);
+
+            for (uint16_t j = 0; j < size; j++)
+                free(g->dir_matrix[j]);
+
             free(g->dir_matrix);
-            for (uint16_t j = 0; j < i; j++) free(g->undir_matrix[j]);
+
+            for (uint16_t j = 0; j < i; j++)
+                free(g->undir_matrix[j]);
+                
             free(g->undir_matrix);
-            free(dir_sources); free(dir_targets); free(dir_weights);
-            free(undir_u); free(undir_v); free(undir_weights);
+            free(dir_sources);
+            free(dir_targets);
+            free(dir_weights);
+            free(undir_u);
+            free(undir_v);
+            free(undir_weights);
             free(g);
             return NULL;
 
@@ -206,7 +288,7 @@ struct graph* read_graph(const char* filename){
     g->undir_list = calloc(size, sizeof(struct edge*));
     if(!g->dir_list || !g->undir_list){
 
-        fprintf(stderr, "Failed to allocate adjacency lists\n");
+        fprintf(stderr, "Blad alokacji listy sasiedztwa\n");
 
         for(uint16_t i = 0; i < size; i++){
 
@@ -231,7 +313,7 @@ struct graph* read_graph(const char* filename){
 
         if(!new_edge){
 
-            fprintf(stderr, "Failed to allocate directed edge\n");
+            fprintf(stderr, "Blad alokacji skierowanej krawedzi\n");
             return NULL;
 
         }
@@ -250,7 +332,7 @@ struct graph* read_graph(const char* filename){
         struct edge* edge1 = malloc(sizeof(struct edge));
         if(!edge1){
 
-            fprintf(stderr, "Failed to allocate undirected edge\n");
+            fprintf(stderr, "Blad alokacji nieskierowanej krawedzi\n");
             return NULL;
 
         }
@@ -264,7 +346,7 @@ struct graph* read_graph(const char* filename){
         if(!edge2){
 
             free(edge1);
-            fprintf(stderr, "Failed to allocate undirected edge\n");
+            fprintf(stderr, "Blad alokacji nieskierowanej krawedzi\n");
             return NULL;
 
         }
