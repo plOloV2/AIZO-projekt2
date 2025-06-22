@@ -14,4 +14,6 @@ void free_result(struct result* result);
 
 uint8_t compare_results(uint8_t mode, struct result *a, struct result *b);
 
+struct result* sort_result_list(struct result* head);
+
 #endif

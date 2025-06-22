@@ -13,7 +13,7 @@ TO DO:
 int main(int argc, char** argv){
 
     if(argc < 2){
-        fprintf(stderr, "Too few arguments");
+        fprintf(stderr, "Zbyt malo argumentow");
         return 1;
     }
 
@@ -24,14 +24,14 @@ int main(int argc, char** argv){
 
         uint8_t progres = 0;
 
-        printf("\rProgress: %i%%\n", progres);
+        printf("\nPostep: %i%%", progres);
         fflush(stdout);
 
         uint16_t amount = atoi(argv[i]);
 
         if(amount < 15){
 
-            fprintf(stderr, "Argument too smll. Min size: 15 .\nContinueing to next arg...");
+            fprintf(stderr, "Podany argument jest zbyt maly. Minimalny rozmiar to: 15 .\nPrzechodze do kolejnego argumentu...");
             continue;
 
         }
@@ -39,7 +39,7 @@ int main(int argc, char** argv){
         double times[5][3][2][100];
         double data_time_avg = 0;
 
-        // #pragma omp parallel for
+        #pragma omp parallel for
         for(uint8_t i = 0; i < 100; i++){
 
             double data_creation_time = omp_get_wtime();
@@ -82,7 +82,7 @@ int main(int argc, char** argv){
                     fprintf(stderr, "Error %i in Ford-Bellman, i = %i, j = %i\n", error, i, j);
 
 
-                error = measure_time(new[j], 0, &times[ford_fulkerson][j][0][i], &times[ford_fulkerson][j][1][i], Ford_Fulkerson);
+                error = measure_time(new[j], 2, &times[ford_fulkerson][j][0][i], &times[ford_fulkerson][j][1][i], Ford_Fulkerson);
                 
                 if(error)
                     fprintf(stderr, "Error %i in Ford-Fulkerson, i = %i, j = %i\n", error, i, j);
@@ -92,31 +92,21 @@ int main(int argc, char** argv){
 
             free_graph(new);
 
-            #pragma omp atomic
-            progres++;
-
-            if(omp_get_thread_num() % 4 == 0){
-
-                #pragma omp critical
-                {
+            #pragma omp critical
+            {
                     
-                    printf("\rProgress: %i%%\n", progres);
-                    fflush(stdout);
+                printf("\rPostep: %i%%", ++progres);
+                fflush(stdout);
 
-                }
-                
             }
 
         }
 
         save_times(times, amount);
 
-        printf("\rProgress: 100%%\n");
-        fflush(stdout);
-
         data_time_avg /= 100;
 
-        printf("Average time to create graphs of size %i: %f s\n", amount, data_time_avg);
+        printf("\rUkonczono etap %i z %i.\nRozmiar problemu: %i.\nSredni czas utworzenia zestawu losowych danych: %f s\n", i, argc - 1, amount, data_time_avg);
 
     }
 

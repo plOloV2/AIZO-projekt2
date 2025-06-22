@@ -3,6 +3,17 @@
 
 uint8_t compare_results(uint8_t mode, struct result *a, struct result *b){
 
+    if(mode == 2){
+
+        a = sort_result_list(a);
+        b = sort_result_list(b);
+
+        mode = 0;
+
+        return 1;
+
+    }
+
     while(a != NULL && b != NULL){
 
         if(mode){

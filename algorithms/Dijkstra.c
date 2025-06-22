@@ -72,10 +72,10 @@ struct result* Dijkstra(struct graph* graph, uint8_t mode){
             // Update neighbors
         if(mode == 0){
 
-            // MATRIX MODE: scan row u of undir_matrix[u][v]
-            for(uint32_t e = 0; e < graph->undir_edges; e++){
+            // MATRIX MODE: scan row u of dir_matrix[u][v]
+            for(uint32_t e = 0; e < graph->dir_edges; e++){
 
-                int16_t w = graph->undir_matrix[min_index][e];
+                int16_t w = graph->dir_matrix[min_index][e];
                 if(w <= 0)
                     continue;  // no edge
 
@@ -84,19 +84,22 @@ struct result* Dijkstra(struct graph* graph, uint8_t mode){
                     if(v == min_index) 
                         continue;
 
-                    if(graph->undir_matrix[v][e] <= 0) 
-                        continue;
+                    if(graph->dir_matrix[v][e] < 0){
 
-                    // relax (min_index -> v) with weight w
-                    if(node_array[v]->start) 
-                        continue;
+                        // Relax edge from min_index to v
+                        if(node_array[v]->start)
+                            continue;
 
-                    int32_t nd = node_array[min_index]->weight + w;
+                        int32_t nd = node_array[min_index]->weight + w;
 
-                    if(nd < node_array[v]->weight){
+                        if(nd < node_array[v]->weight){
 
-                        node_array[v]->weight = nd;
-                        node_array[v]->end = min_index;
+                            node_array[v]->weight = nd;
+                            node_array[v]->end = min_index;
+
+                        }
+
+                        break; // Only one target per edge
 
                     }
 
@@ -105,13 +108,14 @@ struct result* Dijkstra(struct graph* graph, uint8_t mode){
             }
 
         }else {
-            // LIST MODE: walk the adjacency list at undir_list[u]
-            for(struct edge* e = graph->undir_list[min_index]; e; e = e->next){
+            // LIST MODE: walk the adjacency list at dir_list[u]
+            for(struct edge* e = graph->dir_list[min_index]; e; e = e->next){
 
                 uint16_t v = e->target;
 
                 if(node_array[v]->start)
                     continue;
+
                 int32_t nd = node_array[min_index]->weight + e->weight;
 
                 if(nd < node_array[v]->weight){

@@ -15,17 +15,3 @@ void free_result(struct result* head){
     }
 
 }
-
-void print_results(struct result *head){
-
-    struct result *cur = head;
-    
-    while(cur){
-
-        printf("Edge from %u to %u, weight = %d\n", cur->start, cur->end, cur->weight);
-
-        cur = cur->next;
-
-    }
-
-}
