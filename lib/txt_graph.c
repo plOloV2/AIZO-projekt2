@@ -4,12 +4,13 @@
 #include <string.h>
 #include "graph.h"
 
+// funcja odczytująca graf z pliku
 struct graph* read_graph(const char* filename){
 
     FILE* file = fopen(filename, "r");
     if(!file){
 
-        fprintf(stderr, "Failed to open file");
+        fprintf(stderr, "Blad podczas otwierania pliku");
         return NULL;
 
     }
@@ -17,29 +18,29 @@ struct graph* read_graph(const char* filename){
     uint16_t size;
     uint32_t dir_edges, undir_edges;
 
-    // Read graph size
+    // wczytanie rozmiaru grafu
     if(fscanf(file, "size = %hu\n", &size) != 1){
 
-        fprintf(stderr, "Invalid size format\n");
+        fprintf(stderr, "Niepoprawny format rozmiaru grafu\n");
         fclose(file);
         return NULL;
 
     }
 
-    // Read directed edges count
+    // wczytanie ilości skierowanych krawędzi
     if(fscanf(file, "directed_edges = %u\n", &dir_edges) != 1){
 
-        fprintf(stderr, "Invalid directed edges format\n");
+        fprintf(stderr, "Niepoprawny format ilosci skierowanych krawedzi\n");
         fclose(file);
         return NULL;
 
     }
 
-    // Allocate graph structure
+    // alokacja pamięci
     struct graph* g = calloc(1, sizeof(struct graph));
     if(!g){
 
-        fprintf(stderr, "Failed to allocate graph\n");
+        fprintf(stderr, "Bład alokacji grafu\n");
         fclose(file);
         return NULL;
 
@@ -48,7 +49,6 @@ struct graph* read_graph(const char* filename){
     g->size = size;
     g->dir_edges = dir_edges;
 
-    // Allocate directed edge arrays
     uint16_t* dir_sources = malloc(dir_edges * sizeof(uint16_t));
     uint16_t* dir_targets = malloc(dir_edges * sizeof(uint16_t));
     int16_t* dir_weights = malloc(dir_edges * sizeof(int16_t));
@@ -63,7 +63,7 @@ struct graph* read_graph(const char* filename){
 
     }
 
-    // Read directed edges
+    // odczytanie wartosci z pliku
     for(uint32_t i = 0; i < dir_edges; i++){
 
         if(fscanf(file, "%hu %hu %hd\n", &dir_sources[i], &dir_targets[i], &dir_weights[i]) != 3){
@@ -78,7 +78,7 @@ struct graph* read_graph(const char* filename){
 
     }
 
-    // Read undirected edges count
+    // wczytanie ilości skierowanych krawędzi
     if(fscanf(file, "undirected_edges = %u\n", &undir_edges) != 1){
 
         fprintf(stderr, "Invalid undirected edges format\n");
@@ -91,7 +91,6 @@ struct graph* read_graph(const char* filename){
 
     g->undir_edges = undir_edges;
 
-    // Allocate undirected edge arrays
     uint16_t* undir_u = malloc(undir_edges * sizeof(uint16_t));
     uint16_t* undir_v = malloc(undir_edges * sizeof(uint16_t));
     int16_t* undir_weights = malloc(undir_edges * sizeof(int16_t));
@@ -107,7 +106,7 @@ struct graph* read_graph(const char* filename){
 
     }
 
-    // Read undirected edges
+    // odczytanie wartosci z pliku
     for(uint32_t i = 0; i < undir_edges; i++){
 
         if(fscanf(file, "%hu %hu %hd\n", &undir_u[i], &undir_v[i], &undir_weights[i]) != 3){
@@ -125,7 +124,7 @@ struct graph* read_graph(const char* filename){
 
     fclose(file);
 
-    // Initialize directed matrix
+    // inicjjalizacja macieży skierowanej
     g->dir_matrix = malloc(size * sizeof(int16_t*));
     if(!g->dir_matrix){
 
@@ -153,7 +152,7 @@ struct graph* read_graph(const char* filename){
 
     }
 
-    // Fill directed matrix
+    // zapełnienie tejże macieży
     for(uint32_t j = 0; j < dir_edges; j++){
 
         g->dir_matrix[dir_sources[j]][j] = dir_weights[j];
@@ -161,7 +160,7 @@ struct graph* read_graph(const char* filename){
 
     }
 
-    // Initialize undirected matrix
+    // inicjalizacja macieży nieskierowanej
     g->undir_matrix = malloc(size * sizeof(int16_t*));
     if(!g->undir_matrix){
 
@@ -194,7 +193,7 @@ struct graph* read_graph(const char* filename){
 
     }
 
-    // Fill undirected matrix
+    // zapełnienie tejże macieży
     for(uint32_t j = 0; j < undir_edges; j++){
 
         g->undir_matrix[undir_u[j]][j] = undir_weights[j];
@@ -202,7 +201,7 @@ struct graph* read_graph(const char* filename){
 
     }
 
-    // Initialize adjacency lists
+    // inicjalizacja list
     g->dir_list = calloc(size, sizeof(struct edge*));
     g->undir_list = calloc(size, sizeof(struct edge*));
     if(!g->dir_list || !g->undir_list){
@@ -224,7 +223,7 @@ struct graph* read_graph(const char* filename){
 
     }
 
-    // Build directed adjacency list
+    // budowa skierowanej listy
     for(uint32_t j = 0; j < dir_edges; j++){
 
         uint16_t src = dir_sources[j];
@@ -242,13 +241,12 @@ struct graph* read_graph(const char* filename){
         g->dir_list[src] = new_edge;
     }
 
-    // Build undirected adjacency list
+    // budowa nieskierowanej listy
     for(uint32_t j = 0; j < undir_edges; j++){
         uint16_t u = undir_u[j];
         uint16_t v = undir_v[j];
         int16_t weight = undir_weights[j];
 
-        // Add edge u->v
         struct edge* edge1 = malloc(sizeof(struct edge));
         if(!edge1){
 
@@ -262,7 +260,6 @@ struct graph* read_graph(const char* filename){
         edge1->next = g->undir_list[u];
         g->undir_list[u] = edge1;
 
-        // Add edge v->u
         struct edge* edge2 = malloc(sizeof(struct edge));
         if(!edge2){
 
@@ -279,7 +276,7 @@ struct graph* read_graph(const char* filename){
 
     }
 
-    // Free temporary edge arrays
+    // czyszczenie pamięci
     free(dir_sources);
     free(dir_targets);
     free(dir_weights);

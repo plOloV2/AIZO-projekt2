@@ -4,29 +4,31 @@
 #include"lib/lib.h"
 #include"algorithms/algorithms.h"
 
-/*
-TO DO:
--Ford-Fulkerson
--check EVERYTHING
-*/
-
 int main(int argc, char** argv){
 
+    // wielkosc grafów jest podawana jako argumenty, jezeli nie podano zadnego, program oknczy sie
     if(argc < 2){
+
         fprintf(stderr, "Zbyt malo argumentow");
         return 1;
+
     }
+
+    double total_time = omp_get_wtime();
 
     uint8_t err = 0;
 
-
+    // głowna pętla programu, wykonuje sie dla kazdego argumentu
     for(uint8_t i = 1; i < argc; i++){
 
         uint8_t progres = 0;
+        double pass_time = omp_get_wtime();
 
+        // wypisanie postępu w procentach dla uzytkownika
         printf("\nPostep: %i%%", progres);
         fflush(stdout);
 
+        // pobiera rozmiar grafu z argumentów
         uint16_t amount = atoi(argv[i]);
 
         if(amount < 15){
@@ -36,12 +38,15 @@ int main(int argc, char** argv){
 
         }
 
+        // tablica times trzyma czasy wykonania sie algorytmow 
         double times[5][3][2][100];
         double data_time_avg = 0;
 
+        // pętla w której dokonywane są obliczenia, każdaiteracja wykonywana jest przez inny wątek
         #pragma omp parallel for
         for(uint8_t i = 0; i < 100; i++){
 
+            // pomiar czasu utworzenia danych
             double data_creation_time = omp_get_wtime();
 
             struct graph** new = create_graph(amount);
@@ -51,9 +56,15 @@ int main(int argc, char** argv){
             #pragma omp atomic
                 data_time_avg += data_creation_time;
 
-            if(new == NULL)
-                err = 2;
+            // jeżeli dane nie zostały utworzone, podnieś flagę i kontynuuj
+            if(new == NULL){
 
+                err = 2;
+                continue;
+
+            }
+                
+            // dla każdej gęstości grafu mierzy czas wykonywania i zapisuje go do tablicy times
             for(uint8_t j = 0; j < 3; j++){
 
                 uint8_t error;
@@ -89,9 +100,10 @@ int main(int argc, char** argv){
 
             }
             
-
+            // czyszczenie pamięci
             free_graph(new);
 
+            // po zakonczeniu obliczen zwiększ procent ukonczenia
             #pragma omp critical
             {
                     
@@ -102,16 +114,59 @@ int main(int argc, char** argv){
 
         }
 
+        // zapisuje wyniki do plików .csv
         save_times(times, amount);
+
+        // jeżeli podczas wykonywania programu doszło do błędu alokacji danych kończy program
+        if(err != 0)
+            return 2;
 
         data_time_avg /= 100;
 
-        printf("\rUkonczono etap %i z %i.\nRozmiar problemu: %i.\nSredni czas utworzenia zestawu losowych danych: %f s\n", i, argc - 1, amount, data_time_avg);
+        pass_time = omp_get_wtime() - pass_time;
+
+        uint8_t h = 0, m = 0;
+
+        while(pass_time >= 3600){
+
+            h++;
+            pass_time -= 3600;
+
+        }
+
+        while(pass_time >= 60){
+
+            m++;
+            pass_time -= 60;
+
+        }
+
+        // wypisuje statystyki koncowe dla tego przejścia
+        printf("\rUkonczono etap %i z %i.\nRozmiar problemu: %i.\nCzas rozwiazania problemu: %uh %um %fs.\nSredni czas utworzenia zestawu losowych danych: %f s\n", i, argc - 1, amount, h, m, pass_time, data_time_avg);
 
     }
 
-    if(err != 0)
-        return 2;
+    total_time = omp_get_wtime() - total_time;
+
+    uint8_t h = 0, m = 0;
+
+    while(total_time >= 3600){
+
+        h++;
+        total_time -= 3600;
+
+    }
+
+    while(total_time >= 60){
+
+        m++;
+        total_time -= 60;
+
+    }
+
+    // wypisuje czas wykonania całości obliczeń
+    printf("\n\nKoniec obliczen!\nCalosc trwala: %uh %um %fs.\n", h, m, total_time);
 
     return 0;
+
 }

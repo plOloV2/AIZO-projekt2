@@ -4,6 +4,7 @@
 #include"graph.h"
 #include"result_struct.h"
 
+// definicje najważniejszych funkcji
 struct graph** create_graph(uint16_t size);
 
 void free_graph(struct graph** graph);

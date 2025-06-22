@@ -6,12 +6,21 @@
 #include<string.h>
 #include"graph.h"
 
-
+// funckja wykorzystywana do utworzenia ścieżki Hamiltona w grafie
 uint16_t find_step(uint16_t size,  unsigned int* seed);
 
+// struktura trzymająca krawędź (wykorzystywana lokalnie)
+struct edge_pair {
 
+    uint16_t x;
+    uint16_t y;
+
+};
+
+// główna funkcja tworząca losowe grafy o 3 gęstościach (25%, 50%, 99%)
 struct graph** create_graph(uint16_t size){
 
+    // allokacja pamięci pod struktury
     struct graph** result = malloc(sizeof(struct graph*) * 3);
     if(!result){
 
@@ -52,10 +61,10 @@ struct graph** create_graph(uint16_t size){
     }
 
 
-    // densities of created graphs
+    // gęstości grafów
     const uint8_t dens_pct[3] = {25, 50, 99};
 
-
+    // wyznaczenie nasiona dla funkcji rand_r()
     unsigned int seed;
     FILE* f = fopen("/dev/urandom", "rb");
     if(f && fread(&seed, sizeof(seed), 1, f) == 1){
@@ -74,11 +83,11 @@ struct graph** create_graph(uint16_t size){
 
     for(uint8_t i = 0; i < 3; i++){
 
-        // calculates number of edges
+        // wyznaczenie liczby krawędzi w grafie
         result[i]->dir_edges = ((uint32_t)size * (size - 1) * dens_pct[i] + 99) / 100;
         result[i]->undir_edges = ((uint32_t)size * (size - 1) / 2 * dens_pct[i] + 99) / 100;
 
-        // allocates rest of matrix
+        // allokacja pamięci dla macierzy
         for(uint16_t r = 0; r < size; r++){
 
             result[i]->dir_matrix[r] = calloc(result[i]->dir_edges, sizeof(int16_t));
@@ -99,139 +108,295 @@ struct graph** create_graph(uint16_t size){
 
         }
 
-
-        // Optimized directed graph creation with bitset
-        size_t dir_bitset_bytes = ((size_t)size * size + 7) / 8;
-        uint8_t *dir_exists = calloc(1, dir_bitset_bytes);
-        if(!dir_exists){
-
-            fprintf(stderr, "Failed to allocate dir_exists bitset (create_graph)\n");
-            return NULL;
-
-        }
-
-
-        // step is used to create path, that connects every vertex together
-        // prevents disconected graphs
+        // --- FABRYKA GRAFU SKIEROWANEGO ---
+        uint32_t total_dir_possible = (uint32_t)size * (size - 1);
         uint16_t step = find_step(size, &seed);
         uint16_t p = 0, pn = step;
 
-        for(uint16_t j = 0; j < size - 1; j++){
+        // alokacja pamięci pod ścieżkę Hamiltona
+        struct edge_pair* dir_cycle_edges = malloc((size-1) * sizeof(struct edge_pair));
+        if(!dir_cycle_edges){
 
-            pn %= size;
-            p %= size;
-
-            int16_t val = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
-
-            result[i]->dir_matrix[p][j] = val;
-            result[i]->dir_matrix[pn][j] = -val;
-
-            uint32_t index = (uint32_t)p * size + pn;
-            dir_exists[index / 8] |= (1 << (index % 8));
-            
-            p += step;
-            pn += step;
-
-        }
-
-        // fills rest of matrix with random edges
-        for(uint16_t j = size - 1; j < result[i]->dir_edges; j++){
-
-            uint16_t x = rand_r(&seed) % size;
-            uint16_t y = rand_r(&seed) % size;
-
-            while(x == y)
-                y = rand_r(&seed) % size;
-
-            uint32_t index = (uint32_t)x * size + y;
-
-            if(dir_exists[index / 8] & (1 << (index % 8))){
-
-                j--;
-
-            }else {
-
-                int16_t val = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
-
-                result[i]->dir_matrix[x][j] = val;
-                result[i]->dir_matrix[y][j] = -val;
-
-                dir_exists[index / 8] |= (1 << (index % 8));
-
-            }
-            
-        }
-
-        free(dir_exists);
-
-        // Optimized undirected graph creation with bitset
-        size_t undir_bitset_bytes = ((size_t)size * size + 7) / 8;
-        uint8_t *undir_exists = calloc(1, undir_bitset_bytes);
-        if(!undir_exists){
-
-            fprintf(stderr, "Failed to allocate undir_exists bitset (create_graph)\n");
+            fprintf(stderr, "Failed to allocate dir_cycle_edges\n");
             return NULL;
 
         }
 
-        // repeated code for creating undirected graph
-        step = find_step(size, &seed);
-        p = 0; 
-        pn = step;
-
+        // wyznaczenie tejże ścieżki za pomocą "kroku" (liczby względnie pierwszej do ilości wierzchołków)
         for(uint16_t j = 0; j < size - 1; j++){
 
-            pn %= size;
             p %= size;
-
-            int16_t val = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
-
-            result[i]->undir_matrix[p][j] = val;
-            result[i]->undir_matrix[pn][j] = val;
-
-            uint16_t u1 = p < pn ? p : pn;
-            uint16_t v1 = p < pn ? pn : p;
-            uint32_t index = (uint32_t)u1 * size + v1;
-            undir_exists[index / 8] |= (1 << (index % 8));
-            
+            pn %= size;
+            dir_cycle_edges[j].x = p;
+            dir_cycle_edges[j].y = pn;
             p += step;
             pn += step;
 
         }
 
-        // fills rest of matrix with random edges
-        for(uint16_t j = size - 1; j < result[i]->undir_edges; j++){
+        // alokacja pamięci pod tablice wszystkich możliwych skierowanych krawędzie
+        struct edge_pair* all_dir_edges = malloc(total_dir_possible * sizeof(struct edge_pair));
+        if(!all_dir_edges){
 
-            uint16_t x = rand_r(&seed) % size;
-            uint16_t y = rand_r(&seed) % size;
+            fprintf(stderr, "Failed to allocate all_dir_edges\n");
+            free(dir_cycle_edges);
+            return NULL;
 
-            while(x == y)
-                y = rand_r(&seed) % size;
+        }
 
-            uint16_t u1 = x < y ? x : y;
-            uint16_t v1 = x < y ? y : x;
-            uint32_t index = (uint32_t)u1 * size + v1;
+        // wyznaczenie tych krawędzie
+        uint32_t count = 0;
+        for(uint16_t x = 0; x < size; x++){
 
-            if(undir_exists[index / 8] & (1 << (index % 8))){
+            for(uint16_t y = 0; y < size; y++){
 
-                j--;
+                if(x != y){
 
-            }else {
+                    all_dir_edges[count].x = x;
+                    all_dir_edges[count].y = y;
+                    count++;
 
-                int16_t val = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
-
-                result[i]->undir_matrix[x][j] = val;
-                result[i]->undir_matrix[y][j] = val;
-
-                undir_exists[index / 8] |= (1 << (index % 8));
+                }
 
             }
+
+        }
+
+        // alokacja pamięci pod zaznaczenie krawędzi wykorzystany w ścieżce Hamiltona
+        size_t bitset_size = (size_t)size * size;
+        uint8_t* dir_cycle_bitset = calloc(1, (bitset_size + 7) / 8);
+        if(!dir_cycle_bitset){
+
+            fprintf(stderr, "Failed to allocate dir_cycle_bitset\n");
+            free(dir_cycle_edges);
+            free(all_dir_edges);
+            return NULL;
             
         }
 
-        free(undir_exists);
+        // zaznaczenie tych krawędzi
+        for(uint16_t j = 0; j < size - 1; j++){
 
-        // code that takes matrix representation and makes list representation
+            uint16_t x = dir_cycle_edges[j].x;
+            uint16_t y = dir_cycle_edges[j].y;
+            uint32_t index = (uint32_t)x * size + y;
+            dir_cycle_bitset[index / 8] |= (1 << (index % 8));
+
+        }
+
+        // alokacja pamięci pod wszystkie krawędzie - ścieżka Hamiltona
+        uint32_t non_cycle_dir_count = total_dir_possible - (size - 1);
+        struct edge_pair* non_cycle_dir_edges = malloc(non_cycle_dir_count * sizeof(struct edge_pair));
+        if(!non_cycle_dir_edges){
+
+            fprintf(stderr, "Failed to allocate non_cycle_dir_edges\n");
+            free(dir_cycle_edges);
+            free(all_dir_edges);
+            free(dir_cycle_bitset);
+            return NULL;
+
+        }
+
+        // wpisanie tych krawędzi
+        uint32_t non_cycle_idx = 0;
+        for(uint32_t j = 0; j < total_dir_possible; j++){
+
+            uint16_t x = all_dir_edges[j].x;
+            uint16_t y = all_dir_edges[j].y;
+            uint32_t index = (uint32_t)x * size + y;
+
+            if(!(dir_cycle_bitset[index / 8] & (1 << (index % 8)))) 
+                non_cycle_dir_edges[non_cycle_idx++] = all_dir_edges[j];
+            
+        }
+
+        // czyszczenie niepotrzebnych tablic
+        free(all_dir_edges);
+        free(dir_cycle_bitset);
+
+        // tasowanie wyznaczonych krawędzi
+        for(uint32_t j = non_cycle_dir_count - 1; j > 0; j--){
+
+            uint32_t k = rand_r(&seed) % (j + 1);
+            struct edge_pair tmp = non_cycle_dir_edges[j];
+            non_cycle_dir_edges[j] = non_cycle_dir_edges[k];
+            non_cycle_dir_edges[k] = tmp;
+
+        }
+
+        // przypisanie krawędzi zawartych w ścieżce do macierzy
+        for(uint16_t j = 0; j < size - 1; j++){
+
+            uint16_t x = dir_cycle_edges[j].x;
+            uint16_t y = dir_cycle_edges[j].y;
+            int16_t weight = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
+            result[i]->dir_matrix[x][j] = weight;
+            result[i]->dir_matrix[y][j] = -weight;
+
+        }
+
+        // przypisanie pozostałych krawędzi do macierzy poprzez wybór z tablicy dostępnych krawędzi
+        uint32_t non_cycle_needed = result[i]->dir_edges - (size - 1);
+        for(uint32_t j = 0; j < non_cycle_needed; j++){
+
+            uint16_t x = non_cycle_dir_edges[j].x;
+            uint16_t y = non_cycle_dir_edges[j].y;
+            int16_t weight = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
+            uint32_t col = size - 1 + j;
+            result[i]->dir_matrix[x][col] = weight;
+            result[i]->dir_matrix[y][col] = -weight;
+
+        }
+
+        // czyszczenie pozostałości
+        free(dir_cycle_edges);
+        free(non_cycle_dir_edges);
+
+
+        // --- FABRYKA GRAFU NIESKIEROWANEGO ---
+        // (praktycznie identyczna do fabryki grafy skierowanego)
+        uint32_t total_undir_possible = (uint32_t)size * (size - 1) / 2;
+        step = find_step(size, &seed);
+        p = 0;
+        pn = step;
+
+        // alokacja pamięci pod ścieżkę Hamiltona
+        struct edge_pair* undir_cycle_edges = malloc((size - 1) * sizeof(struct edge_pair));
+        if(!undir_cycle_edges){
+
+            fprintf(stderr, "Failed to allocate undir_cycle_edges\n");
+            return NULL;
+
+        }
+
+        // wyznaczenie tejże ścieżki z pomocą liczby względnie pierwszej (step)
+        for(uint16_t j = 0; j < size - 1; j++){
+
+            p %= size;
+            pn %= size;
+            uint16_t u1 = p < pn ? p : pn;
+            uint16_t v1 = p < pn ? pn : p;
+            undir_cycle_edges[j].x = u1;
+            undir_cycle_edges[j].y = v1;
+            p += step;
+            pn += step;
+
+        }
+
+        // alokacja pamięci od tablicę wszystkich możliwych nieskierowanych krawędzi
+        struct edge_pair* all_undir_edges = malloc(total_undir_possible * sizeof(struct edge_pair));
+        if(!all_undir_edges){
+
+            fprintf(stderr, "Failed to allocate all_undir_edges\n");
+            free(undir_cycle_edges);
+            return NULL;
+
+        }
+
+        // zapełnienie tejże tablicy
+        count = 0;
+        for(uint16_t u = 0; u < size; u++){
+
+            for(uint16_t v = u + 1; v < size; v++){
+
+                all_undir_edges[count].x = u;
+                all_undir_edges[count].y = v;
+                count++;
+
+            }
+
+        }
+
+        // alokacja pamięci pod zaznaczenie krawędzi wykorzystany w ścieżce Hamiltona
+        bitset_size = (size_t)size * size;
+        uint8_t* undir_cycle_bitset = calloc(1, (bitset_size + 7) / 8);
+        if(!undir_cycle_bitset){
+
+            fprintf(stderr, "Failed to allocate undir_cycle_bitset\n");
+            free(undir_cycle_edges);
+            free(all_undir_edges);
+            return NULL;
+
+        }
+
+        // zaznaczenie krawędzi wykorzystanych w ścieżce
+        for(uint16_t j = 0; j < size - 1; j++){
+
+            uint16_t u = undir_cycle_edges[j].x;
+            uint16_t v = undir_cycle_edges[j].y;
+            uint32_t index = (uint32_t)u * size + v;
+            undir_cycle_bitset[index / 8] |= (1 << (index % 8));
+
+        }
+
+        // alokacja pamięci pod tablicę możliwych krawędzi (wszyskie - ścieżka)
+        uint32_t non_cycle_undir_count = total_undir_possible - (size - 1);
+        struct edge_pair* non_cycle_undir_edges = malloc(non_cycle_undir_count * sizeof(struct edge_pair));
+        if(!non_cycle_undir_edges){
+
+            fprintf(stderr, "Failed to allocate non_cycle_undir_edges\n");
+            free(undir_cycle_edges);
+            free(all_undir_edges);
+            free(undir_cycle_bitset);
+            return NULL;
+
+        }
+
+        // zapełnienie tejże tablicy
+        non_cycle_idx = 0;
+        for(uint32_t j = 0; j < total_undir_possible; j++){
+
+            uint16_t u = all_undir_edges[j].x;
+            uint16_t v = all_undir_edges[j].y;
+            uint32_t index = (uint32_t)u * size + v;
+            if(!(undir_cycle_bitset[index / 8] & (1 << (index % 8))))
+                non_cycle_undir_edges[non_cycle_idx++] = all_undir_edges[j];
+            
+        }
+
+        // czyszczenie niepotrzebnych rzeczy
+        free(all_undir_edges);
+        free(undir_cycle_bitset);
+
+        // tasowanie tablicy dostępnych krawędzi
+        for(uint32_t j = non_cycle_undir_count - 1; j > 0; j--){
+
+            uint32_t k = rand_r(&seed) % (j + 1);
+            struct edge_pair tmp = non_cycle_undir_edges[j];
+            non_cycle_undir_edges[j] = non_cycle_undir_edges[k];
+            non_cycle_undir_edges[k] = tmp;
+
+        }
+
+        // przypisanie krawędzi zawartych w ścieżce do macierzy
+        for(uint16_t j = 0; j < size - 1; j++){
+
+            uint16_t u = undir_cycle_edges[j].x;
+            uint16_t v = undir_cycle_edges[j].y;
+            int16_t weight = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
+            result[i]->undir_matrix[u][j] = weight;
+            result[i]->undir_matrix[v][j] = weight;
+
+        }
+
+        // przypisanie pozostałych krawędzi do macierzy poprzez wybór z tablicy dostępnych krawędzi
+        uint32_t non_cycle_needed_undir = result[i]->undir_edges - (size - 1);
+        for(uint32_t j = 0; j < non_cycle_needed_undir; j++){
+
+            uint16_t u = non_cycle_undir_edges[j].x;
+            uint16_t v = non_cycle_undir_edges[j].y;
+            int16_t weight = (rand_r(&seed) % (INT16_MAX - 1)) + 1;
+            uint32_t col = size - 1 + j;
+            result[i]->undir_matrix[u][col] = weight;
+            result[i]->undir_matrix[v][col] = weight;
+            
+        }
+
+        // sprzątanko po skonczonym abrykowaniu
+        free(undir_cycle_edges);
+        free(non_cycle_undir_edges);
+
+        // --- FABRYKA LIST Z MACIERZY ---
         result[i]->dir_list = malloc(sizeof(struct edge*) * size);
         result[i]->undir_list = malloc(sizeof(struct edge*) * size);
 
@@ -242,7 +407,7 @@ struct graph** create_graph(uint16_t size){
 
         }
 
-        // Build directed adjacency list from directed incident matrix
+        // buduje skierowaną listę sąsiedztwa z skierowanej macieży incydencji
         for(uint32_t j = 0; j < result[i]->dir_edges; j++){
 
             uint16_t start = size, end = size;
@@ -279,7 +444,7 @@ struct graph** create_graph(uint16_t size){
 
         }
 
-        // Build undirected adjacency list from undirected incident matrix
+        // buduje nieskierowaną listę sąsiedztwa z nieskierowanej macieży incydencji
         for(uint32_t j = 0; j < result[i]->undir_edges; j++){
 
             uint16_t u1 = size, u2 = size;
@@ -289,6 +454,7 @@ struct graph** create_graph(uint16_t size){
             for(uint16_t u = 0; u < size; u++){
 
                 if(result[i]->undir_matrix[u][j] != 0){
+                    
                     if(count == 0){
 
                         u1 = u;

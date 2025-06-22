@@ -3,6 +3,9 @@
 
 #include"../lib/result_struct.h"
 
+// definicja funckji algorytmów
+// zmienna mode decyduje czy algorytm wykorzystuje macierz incydencji (wartość 0) 
+// czy listę sąsiedztwa (wartość 1)
 struct result* Prim(struct graph* graph, uint8_t mode);
 
 struct result* Kruskal(struct graph* graph, uint8_t mode);

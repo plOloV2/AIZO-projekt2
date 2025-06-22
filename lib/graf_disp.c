@@ -2,8 +2,10 @@
 #include<stdio.h>
 #include"graph.h"
 
+// funkcja wykorzystywana podczas testów do wyświetlenia całej zawartosći struktury graph
 void display_graphs(struct graph* graf){
 
+    // funkcja kolejno wypisuje grafy zapisane w strukturze
     printf("\nMaciez nieskierowana:\n");
 
     for(uint16_t i = 0; i < graf->size; i++){

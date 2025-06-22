@@ -1,15 +1,15 @@
 #include "result_struct.h"
 #include <stddef.h>
 
-// Helper function to merge two sorted lists
+// pomocnicza funkcja spajająca dwie posortowane listy
 static struct result* merge(struct result* a, struct result* b){
     
-    struct result dummy; // Dummy node to simplify head handling
+    struct result dummy;
     struct result* tail = &dummy;
     dummy.next = NULL;
 
     while(a && b){
-        // Compare start values first
+        // porównanie wartości start
         if(a->start < b->start){
 
             tail->next = a;
@@ -21,7 +21,7 @@ static struct result* merge(struct result* a, struct result* b){
             b = b->next;
 
         }else {
-            // If start is equal, compare end values
+            // jeżeli wartości start są równe porównujemy end
             if(a->end <= b->end){
 
                 tail->next = a;
@@ -39,19 +39,20 @@ static struct result* merge(struct result* a, struct result* b){
         tail = tail->next;
 
     }
-    // Attach the remaining elements
+    
     tail->next = a ? a : b;
     return dummy.next;
 
 }
 
-// Main sorting function
+// funkcja sortująca liste wyników po watość start i end
 struct result* sort_result_list(struct result* head){
 
+    // lista pusta lub z jednym elementem
     if(head == NULL || head->next == NULL)
-        return head; // Base case: list is empty or has one element
+        return head;
 
-    // Find midpoint using slow/fast pointers
+    // znalezienie środka listy
     struct result* slow = head;
     struct result* fast = head->next;
     while(fast && fast->next){
@@ -61,15 +62,15 @@ struct result* sort_result_list(struct result* head){
 
     }
 
-    // Split the list into two halves
+    // podział listy na dwie połowy
     struct result* mid = slow->next;
     slow->next = NULL;
 
-    // Recursively sort both halves
+    // rekursywne sortowanie połówek
     struct result* left = sort_result_list(head);
     struct result* right = sort_result_list(mid);
 
-    // Merge the sorted halves
+    // sklejenie połówek w całość
     return merge(left, right);
     
 }

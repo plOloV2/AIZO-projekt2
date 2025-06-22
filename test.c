@@ -4,10 +4,13 @@
 #include"lib/lib.h"
 #include"algorithms/algorithms.h"
 
+// funkcja wczytujaca graf z pliku .txt
 struct graph* read_graph(const char* filename);
 
+// funkcja wyswietlajaca zawartosc struktury graph
 void display_graphs(struct graph* graf);
 
+// funkcje wypisujace wyniki dzialania algorytmow
 void print_results_Pr(struct result *r1, struct result *r2){
 
     printf("\nPrim macierz:\n");
@@ -175,18 +178,81 @@ void print_results_FF(struct result *r1, struct result *r2){
 
 int main(){
 
-    struct graph* graf = read_graph("test.txt");
-    display_graphs(graf);
+    struct graph* test_graph = NULL;
+    struct graph** created_graphs = NULL;
+    int choice;
+    uint16_t size;
+    char filename[256];
+    int density_choice;
 
-    print_results_Pr(Prim(graf, 0), Prim(graf, 1));
 
-    print_results_Kr(Kruskal(graf, 0), Kruskal(graf, 1));
+    // zapytanie uzytkownika o opcje i utworzenie zgodnie z nia grafu
+    printf("1. Stworz nowy graf\n");
+    printf("2. Zaladuj graf z pliku\n");
+    printf("Podaj opcje: ");
+    scanf("%d", &choice);
 
-    print_results_Di(Dijkstra(graf, 0), Dijkstra(graf, 1));
+    if(choice == 1){
 
-    print_results_FB(Ford_Bellman(graf, 0), Ford_Bellman(graf, 1));
+        printf("Podaj liczbe krawedzi: ");
+        scanf("%hu", &size);
+        
+        created_graphs = create_graph(size);
+        if(!created_graphs){
 
-    print_results_FF(Ford_Fulkerson(graf, 0), Ford_Fulkerson(graf, 1));
+            fprintf(stderr, "Blad tworzenia grafu\n");
+            return 1;
+
+        }
+
+        printf("\nUtworzono grafy o gestosciach: 25%%, 50%%, 99%%\n");
+        printf("Wybierz gestosc (0-2): ");
+        scanf("%d", &density_choice);
+        
+        if(density_choice < 0 || density_choice > 2){
+
+            fprintf(stderr, "Nieprawidlowa wartosc\n");
+            return 1;
+
+        }
+
+        test_graph = created_graphs[density_choice];
+        printf("\nUzywam grafu o gestosci %d%%:\n", (density_choice == 0) ? 25 : (density_choice == 1) ? 50 : 99);
+        display_graphs(test_graph);
+        
+    }else if(choice == 2){
+
+        printf("Podaj nazwe pliku: ");
+        scanf("%255s", filename);
+        
+        test_graph = read_graph(filename);
+        if(!test_graph){
+
+            fprintf(stderr, "Nie udalo sie zaladowac grafu\n");
+            return 1;
+
+        }
+        
+        printf("\nZaladowano graf z pliku '%s':\n", filename);
+        display_graphs(test_graph);
+
+    }else {
+
+        fprintf(stderr, "Nieprawodlowy wybor\n");
+        return 1;
+
+    }
+
+    // uruchamia algorytmu dla wybranego wczesniej grafu i wyswietla wyniki ich pracy
+    print_results_Pr(Prim(test_graph, 0), Prim(test_graph, 1));
+
+    print_results_Kr(Kruskal(test_graph, 0), Kruskal(test_graph, 1));
+
+    print_results_Di(Dijkstra(test_graph, 0), Dijkstra(test_graph, 1));
+
+    print_results_FB(Ford_Bellman(test_graph, 0), Ford_Bellman(test_graph, 1));
+
+    print_results_FF(Ford_Fulkerson(test_graph, 0), Ford_Fulkerson(test_graph, 1));
 
     return 0;
 

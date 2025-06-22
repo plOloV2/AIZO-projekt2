@@ -1,6 +1,7 @@
 #include"graph.h"
 #include<stdlib.h>
 
+// funkcja czyszcząca tablice danych 
 void free_graph(struct graph** graphs){
 
     if(graphs == NULL) 
@@ -10,7 +11,7 @@ void free_graph(struct graph** graphs){
         if (graphs[i] == NULL) 
             continue;
 
-        // Free dir_matrix
+        // usuwa macierz skierowaną
         if(graphs[i]->dir_matrix != NULL){
 
             for(uint16_t row = 0; row < graphs[i]->size; row++)
@@ -20,7 +21,7 @@ void free_graph(struct graph** graphs){
 
         }
 
-        // Free undir_matrix
+        // usuwa macierz nieskierowaną
         if(graphs[i]->undir_matrix != NULL){
 
             for(uint16_t row = 0; row < graphs[i]->size; row++)
@@ -30,7 +31,7 @@ void free_graph(struct graph** graphs){
 
         }
 
-        // Free undirected adjacency lists
+        // usuwa liste nieskierowaną
         if(graphs[i]->undir_list != NULL){
             for(uint16_t j = 0; j < graphs[i]->size; j++){
 
@@ -50,7 +51,7 @@ void free_graph(struct graph** graphs){
 
         }
 
-        // Free directed adjacency lists
+        // usuwa liste skierowaną
         if(graphs[i]->dir_list != NULL){
 
             for(uint16_t j = 0; j < graphs[i]->size; j++){
@@ -71,12 +72,14 @@ void free_graph(struct graph** graphs){
 
         }
 
-        // Free graph structure
+        // usuwa structure graph
         free(graphs[i]);
 
     }
 
-    // Free the graph array
+    // usuwa całą tablicę
     free(graphs);
+
+    graphs = NULL;
 
 }

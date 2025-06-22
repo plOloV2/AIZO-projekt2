@@ -4,14 +4,15 @@
 #include<stdlib.h>
 #include<string.h>
 
-
+// struktura trzymająca pomocne informacje o krawędziach
+// wykorzystywana lokalnie
 struct edge_info {
     uint16_t u;
     uint16_t v;
     int16_t weight;
 };
 
-
+// funkcja porównania dwóch krawędzi, wykorzystywana do sortownia po ich wadze
 static int compare_edges(const void* a, const void* b){
 
     const struct edge_info* edge1 = (const struct edge_info*)a;
@@ -27,7 +28,7 @@ static int compare_edges(const void* a, const void* b){
 
 }
 
-
+// funkcja sprawdzająca kolor wierzchołka, zwraca jego kolor
 uint16_t union_find(uint16_t* union_tab, uint16_t u){
 
     uint16_t root = u;
@@ -35,7 +36,7 @@ uint16_t union_find(uint16_t* union_tab, uint16_t u){
     while (union_tab[root] != root) 
         root = union_tab[root];
     
-    // Path compression
+    // kompresja ścieżki
     while(u != root){
 
         uint16_t next = union_tab[u];
@@ -48,7 +49,7 @@ uint16_t union_find(uint16_t* union_tab, uint16_t u){
 
 }
 
-
+// funkcja "malująca" wierzchołek u i jego poddrzewo na kolor wierzchołka v
 void union_connect(uint16_t* parent, uint16_t u, uint16_t v){
 
     uint16_t ru = union_find(parent, u);
@@ -57,29 +58,32 @@ void union_connect(uint16_t* parent, uint16_t u, uint16_t v){
 
 }
 
-
+// funkcja implementująca algorytm Kruskala
 struct result* Kruskal(struct graph* graph, uint8_t mode){
 
     struct result* head = NULL;
     struct result* tail = NULL;
 
+    // alokacja pamięci pod tablicę wszystkich krawędzi
     struct edge_info* edges_sorted = malloc(sizeof(struct edge_info) * graph->undir_edges);
     if(!edges_sorted){
 
-        fprintf(stderr, "Failed to allocate edge array (Kruskal)\n");
+        fprintf(stderr, "Blad alokacji tablicy krawedzi (Kruskal)\n");
         return NULL;
 
     }
 
     uint32_t id = 0;
 
+    // wydobycie krawędzi z macierzy/listy
     for(uint16_t u = 0; u < graph->size; u++){
         for(uint16_t v = u + 1; v < graph->size; v++){
 
             int16_t w = 0;
 
             if(mode == 0){
-                // lookup in incidence matrix
+
+                // przeszukiwanie macierzy
                 for(uint32_t e_i = 0; e_i < graph->undir_edges; e_i++){
 
                     if(graph->undir_matrix[u][e_i] > 0 && graph->undir_matrix[v][e_i] > 0){
@@ -92,7 +96,8 @@ struct result* Kruskal(struct graph* graph, uint8_t mode){
                 }
 
             }else {
-                // lookup in adjacency list
+
+                // przeszukiwanie listy
                 struct edge* e = graph->undir_list[u];
                 while(e){
 
@@ -114,29 +119,38 @@ struct result* Kruskal(struct graph* graph, uint8_t mode){
 
             if(id >= graph->undir_edges){
 
-                fprintf(stderr, "Edge count mismatch (Kruskal)\n");
+                fprintf(stderr, "Liczba krawędzi się nie zgadza (Kruskal)\n");
                 free(edges_sorted);
                 return NULL;
 
             }
 
-          
+            // dodanie znalezionej krawędzi do listy
             edges_sorted[id++] = (struct edge_info){.u = u, .v = v, .weight = w};
 
         }
 
     }
 
+    // posortowanie listy krawędzi po wadze 
     qsort(edges_sorted, id, sizeof(struct edge_info), compare_edges);
 
+    // tablica trzymająca kolory wierzchołków
     uint16_t union_tab[graph->size];
 
+    // inicjacja tablicy z osobnym kolorem dla każdego wierzchołka
     for(uint16_t i = 0; i < graph->size; i++)
         union_tab[i] = i;
 
+    // liczy ile krawędzi użyliśmy
     uint16_t used = 0;
 
+    // główna pętla algorytmu
     for(uint32_t i = 0; i < id && used < graph->size - 1; i++){
+
+        // w tej pętli wybieramy po kolei krawędzie z posortowanej listy
+        // jeżeli krawędź łączy wierzchołki o różnych kolorach dodajemy ją do rozwiązania
+        // kolorujemy wierzchołki na ten sam kolor
 
         uint16_t u = edges_sorted[i].u;
         uint16_t v = edges_sorted[i].v;
@@ -148,7 +162,7 @@ struct result* Kruskal(struct graph* graph, uint8_t mode){
             struct result* node = malloc(sizeof(*node));
             if(!node){
 
-                fprintf(stderr, "NODE alloc failed (Kruskal)");
+                fprintf(stderr, "Alokacja wezelka spadla z rowerka (Kruskal)");
                 free(edges_sorted);
                 free_result(head);
                 return NULL;
@@ -175,10 +189,10 @@ struct result* Kruskal(struct graph* graph, uint8_t mode){
 
     }
 
-    // If we didn't pick enough edges, graph was disconnected
+    // jeżeli nie użyliśmy dość dużo krawędzi graf jest niespójny
     if(used != graph->size - 1){
 
-        fprintf(stderr, "Disconnected graph (Kruskal)\n");
+        fprintf(stderr, "Graf niespojny (Kruskal)\n");
         free_result(head);
         head = NULL;
 

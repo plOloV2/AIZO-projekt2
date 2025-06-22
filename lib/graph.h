@@ -4,28 +4,29 @@
 #include<stdint.h>
 
 struct edge {
-    uint16_t target;            // end vertex of edge
-    int16_t weight;             // weight of edge
-    struct edge* next;          // pointer to next edge
+    uint16_t target;            // końcowy wierzchołek krawędzi
+    int16_t weight;             // waga krawędzi
+    struct edge* next;          // wskaźnik do następnej krawędzi
 };
 
 struct graph {
-    uint16_t size;              // number of vertexes
-    uint32_t dir_edges;         // number of edges in directed graph
-    uint32_t undir_edges;       // number of edges in undirected graph
-    int16_t** dir_matrix;       // directed incident matrix
-    int16_t** undir_matrix;     // undirected incident matrix
-    struct edge** undir_list;   // undirected list
-    struct edge** dir_list;     // directed list
+    uint16_t size;              // liczba wierzchołków
+    uint32_t dir_edges;         // liczba krawędzi w skierowanym grafie
+    uint32_t undir_edges;       // liczba krawędzi w nieskierowanym grafie
+    int16_t** dir_matrix;       // skierowana mcież incydencji
+    int16_t** undir_matrix;     // nieskierowana mcież incydencji
+    struct edge** undir_list;   // nieskierowana lista sąsiedztwa
+    struct edge** dir_list;     // skierowana lista sąsiedztwa
 };
 
 /*
-    - in matrix representation and in lists firs dimention of array is of size of graph
-    - both matrix representations second array dimention is respective number of edges
-    - values represented inside matrixes are weights of edges
-    - edge inside directed incident matrix is mark with positive value at start edge index and negative at end index
-    - in undirected incident matrix both values are positive
-    - lists hold same graphs as their matrix counterparts
+    - w reprezentacji macierzowej i listowej, pierwszy wymiar tablicy odpowiada rozmiarowi grafu
+    - w obu reprezentacjach macierzowych drugi wymiar tablicy odpowiada liczbie krawędzi
+    - wartości wewnątrz macierzy reprezentują wagi krawędzi
+    - krawędź w skierowanej macierzy incydencji jest oznaczona dodatnią wartością przy indeksie 
+        wierzchołka początkowego i ujemną przy indeksie wierzchołka końcowego
+    - w nieskierowanej macierzy incydencji obie wartości są dodatnie
+    - listy przechowują te same grafy, co odpowiadające im macierze
 */
 
 #endif

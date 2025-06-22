@@ -1,6 +1,7 @@
 #include<stdint.h>
 #include<stdlib.h>
 
+// funckja sprawdzająca czy liczba jest względnie pierwsza
 uint16_t gcd(uint16_t a, uint16_t b){
 
     uint16_t temp;
@@ -17,6 +18,7 @@ uint16_t gcd(uint16_t a, uint16_t b){
 
 }
 
+// funkcja znajdująca losową liczbę względnie pierwszą do parametru size
 uint16_t find_step(uint16_t size,  unsigned int* seed){
 
     uint16_t r;
