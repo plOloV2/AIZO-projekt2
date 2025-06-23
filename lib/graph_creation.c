@@ -475,7 +475,7 @@ struct graph** create_graph(uint16_t size){
 
             if(count == 2){
 
-                // Edge u1 -> u2
+                // krawędź u1 -> u2
                 struct edge* new_edge1 = malloc(sizeof(struct edge));
                 if(!new_edge1){
 
@@ -489,7 +489,7 @@ struct graph** create_graph(uint16_t size){
                 new_edge1->next = result[i]->undir_list[u1];
                 result[i]->undir_list[u1] = new_edge1;
 
-                // Edge u2 -> u1
+                // krawędź u2 -> u1
                 struct edge* new_edge2 = malloc(sizeof(struct edge));
                 if(!new_edge2){
 
